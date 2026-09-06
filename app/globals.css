@@ -1,26 +1,130 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   Vera Coffee Export — design tokens
+
+   The page is light: a warm paper ground, the colour of unbleached stock.
+   Tokens are semantic (bg / fg / muted / line) rather than literal, so a
+   section can invert simply by redefining them — which is exactly what the
+   journey cinematic does, since that footage is rendered dark and would look
+   washed out forced onto paper.
+   --------------------------------------------------------------------------- */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Ground */
+  --bg: #f4efe6;
+  --surface: #fbf8f2;
+  --line: #ddd2c1;
+
+  /* Type */
+  --fg: #17120d;
+  --muted: #5b5147;
+  --faint: #8a7e70;
+
+  /* Accents. Two ambers: one dark enough to pass contrast as text, one
+     saturated for fills that carry dark type on top. */
+  --accent: #9c560f;
+  --accent-solid: #c67b24;
+  --accent-hover: #a8641a;
+  --forest: #1e3a2b;
+  --moss: #4a5d3a;
+  --clay: #8c3f22;
+
+  /* The one motion curve. Mirrored in lib/motion.ts — keep them in step. */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 0.3s;
+  --dur-base: 0.6s;
+  --dur-slow: 1.2s;
+}
+
+/* Any section that needs to carry dark imagery opts in by redefining the same
+   tokens. Everything inside then themes itself with no per-element overrides. */
+.on-dark {
+  --bg: #0b0907;
+  --surface: #14100d;
+  --line: #2b231c;
+  --fg: #f3ebdd;
+  --muted: #b8ac9b;
+  --faint: #8d8377;
+  --accent: #dd9c42;
+  --accent-solid: #c67b24;
+  --accent-hover: #e0983f;
+  --clay: #d98f6a;
+  background: var(--bg);
+  color: var(--fg);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-solid: var(--accent-solid);
+  --color-accent-hover: var(--accent-hover);
+  --color-forest: var(--forest);
+  --color-moss: var(--moss);
+  --color-clay: var(--clay);
+
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-inter);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  /* Lenis drives scrolling; native smooth scroll would fight it. */
+  scroll-behavior: auto;
+  background: var(--bg);
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+.font-display {
+  font-family: var(--font-fraunces), Georgia, serif;
+  letter-spacing: -0.02em;
+}
+
+/* Small caps label above every section headline. */
+.kicker {
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+::selection {
+  background: var(--accent-solid);
+  color: #17120d;
+}
+
+/* Tabular figures for anything a buyer compares across rows. */
+.nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

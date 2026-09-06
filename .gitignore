@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# blender
+blender/blender-path.txt
+blender/out/
+blender/*.blend1
+
+# agent toolchain (machine-local)
+.agents/
