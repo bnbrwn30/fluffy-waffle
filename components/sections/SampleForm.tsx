@@ -20,7 +20,7 @@ import Reveal from "@/components/ui/Reveal";
  * questions", the more of them get finished.
  */
 const field =
-  "w-full rounded-lg border border-line bg-bg px-3 py-2.5 text-sm text-fg " +
+  "w-full rounded-lg border border-line bg-bg px-3 py-2.5 text-base text-fg sm:text-sm " +
   "placeholder:text-faint transition-[border-color,box-shadow] duration-[var(--dur-fast)] " +
   "[transition-timing-function:var(--ease)] hover:border-faint/70 " +
   "focus:border-accent-solid focus:outline-none " +
@@ -115,10 +115,10 @@ export default function SampleForm() {
     <section
       id="contact"
       aria-labelledby="contact-heading"
-      className="relative scroll-mt-28 border-t border-line bg-bg py-20 sm:py-28"
+      className="relative scroll-mt-24 border-t border-line bg-bg py-16 sm:py-20 lg:py-28"
     >
-      <div className="mx-auto max-w-6xl px-6 sm:px-10">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1fr)] lg:gap-16">
+      <div className="mx-auto max-w-6xl px-5 sm:px-10">
+        <div className="grid gap-9 sm:gap-10 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1fr)] lg:gap-16">
           <div className="lg:pt-2">
             <Reveal>
               <p className="kicker">Next step</p>
@@ -126,13 +126,13 @@ export default function SampleForm() {
             <Reveal delay={0.06}>
               <h2
                 id="contact-heading"
-                className="font-display mt-4 text-[1.75rem] leading-[1.1] text-fg sm:text-4xl"
+                className="font-display mt-3 text-[clamp(1.6rem,6.8vw,1.75rem)] leading-[1.12] text-balance text-fg sm:mt-4 sm:text-4xl sm:leading-[1.1]"
               >
                 Cup it before we talk price.
               </h2>
             </Reveal>
             <Reveal delay={0.1}>
-              <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-muted">
+              <p className="mt-4 max-w-sm text-[0.9375rem] leading-relaxed text-muted">
                 Tell us roughly what you buy — volume, grades, the profiles
                 you are after — and we will courier 300 g samples of whatever
                 fits, along with the current offer list. No charge for the
@@ -195,7 +195,7 @@ export default function SampleForm() {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: DUR.base, ease: EASE }}
-                  className="rounded-2xl border border-accent-solid bg-surface p-8"
+                  className="rounded-2xl border border-accent-solid bg-surface p-6 sm:p-8"
                   role="status"
                 >
                   <p className="font-display text-2xl text-fg">
@@ -222,7 +222,7 @@ export default function SampleForm() {
                   noValidate
                   exit={{ opacity: 0, y: -12 }}
                   transition={{ duration: DUR.fast, ease: EASE }}
-                  className="relative rounded-2xl border border-line bg-surface p-5 shadow-[0_18px_40px_-32px_rgba(23,18,13,0.5)] sm:p-7"
+                  className="relative rounded-2xl border border-line bg-surface p-4 shadow-[0_18px_40px_-32px_rgba(23,18,13,0.5)] xs:p-5 sm:p-7"
                 >
                   {/* Honeypot: positioned off-screen rather than display:none,
                       because bots skip hidden fields but fill this one. */}
@@ -234,7 +234,7 @@ export default function SampleForm() {
                     className="absolute left-[-9999px] h-0 w-0 opacity-0"
                   />
 
-                  <div className="grid gap-3.5 sm:grid-cols-2">
+                  <div className="grid gap-3.5 xs:grid-cols-2">
                     <Field label="Name" error={errors.name?.message}>
                       <input
                         {...register("name")}
@@ -274,7 +274,7 @@ export default function SampleForm() {
                       {ORIGINS.map((o) => (
                         <label
                           key={o.id}
-                          className="cursor-pointer select-none rounded-full border border-line px-3.5 py-1.5 text-[13px] text-muted transition-[background-color,border-color,color] duration-[var(--dur-fast)] [transition-timing-function:var(--ease)] hover:border-faint has-[:checked]:border-accent-solid has-[:checked]:bg-accent-solid has-[:checked]:text-fg has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent"
+                          className="inline-flex min-h-10 cursor-pointer select-none items-center rounded-full border border-line px-4 text-[13px] text-muted transition-[background-color,border-color,color] duration-[var(--dur-fast)] [transition-timing-function:var(--ease)] hover:border-faint has-[:checked]:border-accent-solid has-[:checked]:bg-accent-solid has-[:checked]:text-fg has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent"
                         >
                           <input
                             type="checkbox"

@@ -125,7 +125,7 @@ export default function Nav() {
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
-          className="rounded-full border border-white/30 p-2 text-fg md:hidden"
+          className="-mr-1 flex h-11 w-11 items-center justify-center rounded-full border border-white/30 text-fg md:hidden"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
             {open ? (
@@ -164,7 +164,7 @@ export default function Nav() {
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="rounded-xl px-4 py-3 hover:bg-white/25 hover:text-fg"
+                className="rounded-xl px-4 py-3.5 hover:bg-white/25 hover:text-fg"
               >
                 {l.label}
               </a>

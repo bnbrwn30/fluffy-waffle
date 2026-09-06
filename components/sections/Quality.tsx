@@ -161,9 +161,9 @@ export default function Quality() {
     <section
       id="quality"
       aria-labelledby="quality-heading"
-      className="relative border-t border-line bg-bg py-20 sm:py-28"
+      className="relative border-t border-line bg-bg py-16 sm:py-20 lg:py-28"
     >
-      <div className="mx-auto max-w-5xl px-6 sm:px-10">
+      <div className="mx-auto max-w-5xl px-5 sm:px-10">
         <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
           <div>
             <Reveal>
@@ -172,14 +172,14 @@ export default function Quality() {
             <Reveal delay={0.06}>
               <h2
                 id="quality-heading"
-                className="font-display mt-4 max-w-lg text-3xl leading-[1.08] text-fg sm:text-[2.5rem]"
+                className="font-display mt-3 max-w-lg text-[clamp(1.75rem,7vw,2rem)] leading-[1.1] text-balance text-fg sm:mt-4 sm:text-[2.5rem] sm:leading-[1.08]"
               >
                 Traceable to the washing station.
               </h2>
             </Reveal>
           </div>
           <Reveal delay={0.12}>
-            <p className="max-w-[15rem] text-sm leading-relaxed text-muted">
+            <p className="max-w-sm text-sm leading-relaxed text-muted sm:max-w-[15rem]">
               Pick a lot to see its cupping profile and pre-shipment
               analysis.
             </p>
@@ -192,7 +192,7 @@ export default function Quality() {
             role="tablist"
             aria-label="Available lots"
             onKeyDown={onKeyDown}
-            className="mt-9 grid grid-cols-2 gap-px border border-line bg-line sm:grid-cols-4"
+            className="mt-7 grid grid-cols-2 gap-px border border-line bg-line sm:mt-9 sm:grid-cols-4"
           >
             {LOTS.map((l, i) => {
               const on = i === active;
@@ -208,7 +208,7 @@ export default function Quality() {
                   aria-controls="lot-panel"
                   tabIndex={on ? 0 : -1}
                   onClick={() => setActive(i)}
-                  className={`group relative px-4 py-3.5 text-left transition-colors duration-[var(--dur-fast)] [transition-timing-function:var(--ease)] ${
+                  className={`group relative px-3.5 py-3 text-left transition-colors sm:px-4 sm:py-3.5 duration-[var(--dur-fast)] [transition-timing-function:var(--ease)] ${
                     on ? "bg-surface" : "bg-bg hover:bg-surface/60"
                   }`}
                 >
@@ -218,16 +218,16 @@ export default function Quality() {
                       on ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100 group-hover:opacity-40"
                     }`}
                   />
-                  <span className="flex items-baseline justify-between gap-2">
+                  <span className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-2">
                     <span
-                      className={`font-display truncate text-base leading-tight transition-colors duration-[var(--dur-fast)] ${
+                      className={`font-display text-[0.9375rem] leading-tight transition-colors duration-[var(--dur-fast)] sm:truncate sm:text-base ${
                         on ? "text-fg" : "text-muted group-hover:text-fg"
                       }`}
                     >
                       {l.region}
                     </span>
                     <span
-                      className={`nums font-display shrink-0 text-lg leading-none transition-colors duration-[var(--dur-fast)] ${
+                      className={`nums font-display shrink-0 text-base leading-none transition-colors duration-[var(--dur-fast)] sm:text-lg ${
                         on ? "text-accent" : "text-faint"
                       }`}
                     >
@@ -258,7 +258,7 @@ export default function Quality() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full max-w-[180px]"
+                className="w-full max-w-[200px] sm:max-w-[180px]"
               >
                 <Image
                   src={lot.image}
@@ -267,7 +267,12 @@ export default function Quality() {
                   height={711}
                   sizes="(min-width: 1024px) 200px, (min-width: 768px) 40vw, 60vw"
                   className="h-auto w-full"
-                  priority={lot === LOTS[0]}
+                  // Lazy (the default), deliberately. This sack sits well below
+                  // the fold; `priority` put a <link rel="preload"> carrying
+                  // the whole ten-entry srcset in the document head, ahead of
+                  // the hero on a cold load, and `eager` still hoisted one.
+                  // Lenis scrolls the window natively — there is no
+                  // transformed wrapper — so the lazy observer fires here.
                 />
               </motion.div>
             </div>
@@ -276,7 +281,7 @@ export default function Quality() {
             <figure className="border-b border-line px-4 py-5 lg:border-b-0 lg:border-r">
               <svg
                 viewBox="0 0 280 236"
-                className="mx-auto w-full max-w-[210px]"
+                className="mx-auto w-full max-w-[240px] sm:max-w-[210px]"
                 role="img"
                 aria-label={`Cupping profile for lot ${lot.id}: ${AXIS_LABELS.map(
                   (a, i) => `${a} ${lot.scores[i]}`,
@@ -337,7 +342,7 @@ export default function Quality() {
             </figure>
 
             {/* Spec sheet */}
-            <div className="p-5 sm:p-6 md:col-span-2 lg:col-span-1">
+            <div className="p-4 sm:p-6 md:col-span-2 lg:col-span-1">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="nums text-[10px] tracking-[0.14em] text-accent">{lot.id}</p>

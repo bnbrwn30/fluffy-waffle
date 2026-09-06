@@ -5,10 +5,12 @@ import GrainOverlay from "@/components/ui/GrainOverlay";
 import SmoothScroll from "@/components/ui/SmoothScroll";
 import Nav from "@/components/ui/Nav";
 
+// Weight is the only axis this design ever varies. Requesting SOFT, WONK and
+// opsz as well pulled a 120 kB woff2 instead of a 34 kB one — four axes of
+// interpolation data for three the stylesheet never touches.
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
-  axes: ["SOFT", "WONK", "opsz"],
   display: "swap",
 });
 

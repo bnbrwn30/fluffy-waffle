@@ -54,6 +54,13 @@
   color: var(--fg);
 }
 
+/* One extra breakpoint below Tailwind's `sm`. Small phones (320–400px) are a
+   real layout regime on this page — side-by-side CTAs and two-up fact grids
+   stop working there long before 640px. */
+@theme {
+  --breakpoint-xs: 26rem;
+}
+
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -82,6 +89,9 @@ html {
 body {
   background: var(--bg);
   color: var(--fg);
+  /* Long unbroken strings — lot codes, station names, email addresses — must
+     not be what forces a 320px phone into a horizontal scrollbar. */
+  overflow-wrap: break-word;
   font-family: var(--font-inter), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -95,10 +105,16 @@ body {
 
 /* Small caps label above every section headline. */
 .kicker {
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--accent);
+}
+
+@media (min-width: 40rem) {
+  .kicker {
+    font-size: 0.6875rem;
+  }
 }
 
 :focus-visible {
@@ -116,6 +132,141 @@ body {
 .nums {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
+}
+
+/* --- Above-the-fold entrance -----------------------------------------------
+ *
+ * The hero animates from CSS, not from the motion library, and the difference
+ * is not stylistic. A motion component renders its `initial` values into the
+ * server HTML — so the headline shipped as translateY(110%) inside an
+ * overflow-hidden mask and the rest of the hero as opacity:0, and none of it
+ * became visible until ~380 kB of JavaScript had downloaded, parsed and
+ * hydrated. On a cold visit over a real connection that is a blank cream page
+ * for a second or more; the site did not just feel slow, it showed nothing.
+ *
+ * These keyframes run off the stylesheet, so the entrance plays the moment the
+ * HTML parses, with no JS involved at all. Everything below the fold still
+ * goes through <Reveal>, where hydration has long since finished and the
+ * scroll-linked timing is worth the dependency.
+ *
+ * `both` matters: it holds the from-state before the delay elapses and the
+ * to-state after, so nothing flashes in at full opacity first.
+ */
+@keyframes enter-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes enter-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* The line itself never fades — it slides up out of its own clipping mask,
+   which is what makes a display headline read as set rather than as faded in. */
+@keyframes enter-line {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.enter-rise {
+  animation: enter-rise var(--dur-slow) var(--ease) both;
+}
+
+.enter-fade {
+  animation: enter-fade var(--dur-base) var(--ease) both;
+}
+
+.enter-line {
+  animation: enter-line var(--dur-slow) var(--ease) both;
+}
+
+/* Stagger steps, matching STAGGER.loose / STAGGER.base in lib/motion.ts. */
+.enter-d1 {
+  animation-delay: 0.14s;
+}
+.enter-d2 {
+  animation-delay: 0.28s;
+}
+.enter-d3 {
+  animation-delay: 0.42s;
+}
+.enter-d4 {
+  animation-delay: 0.56s;
+}
+.enter-d5 {
+  animation-delay: 0.7s;
+}
+
+/* --- Scroll-triggered entrance (<Reveal>) ---------------------------------
+ *
+ * JavaScript decides *when* — an observer, with a scroll-position backstop —
+ * but CSS does the animating. A compositor-driven keyframe plays even when the
+ * main thread is busy, where a requestAnimationFrame interpolation simply
+ * stops and strands the element on its hidden values.
+ *
+ * The end state is a plain declaration, not somewhere an animation has to
+ * travel to, so `.reveal-in` content is correct the instant the class lands
+ * whether or not a single frame of the entrance ever renders.
+ */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+.reveal-in.reveal {
+  opacity: 1;
+  transform: none;
+  animation: enter-rise var(--dur-base) var(--ease) both;
+}
+
+.reveal-line {
+  transform: translateY(110%);
+}
+
+.reveal-in.reveal-line {
+  transform: none;
+  animation: enter-line var(--dur-slow) var(--ease) both;
+}
+
+/* No JavaScript, no observer, no class — so the hidden state must not apply
+   at all. Better an entrance nobody sees than a page nobody can read. */
+@media (scripting: none) {
+  .reveal,
+  .reveal-line {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The blanket rule below collapses durations to nothing, which would leave
+     these parked on their from-state. Drop the animation outright so the
+     content is simply there — and for the scroll-triggered pair, drop the
+     hidden state too, since nothing would then animate it away. */
+  .enter-rise,
+  .enter-fade,
+  .enter-line,
+  .reveal,
+  .reveal-line {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

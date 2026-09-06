@@ -23,29 +23,29 @@ export default function Logistics() {
     <section
       id="logistics"
       aria-labelledby="logistics-heading"
-      className="relative border-t border-line bg-bg py-24 sm:py-32"
+      className="relative border-t border-line bg-bg py-16 sm:py-24 lg:py-32"
     >
-      <div className="mx-auto max-w-7xl px-6 sm:px-10">
+      <div className="mx-auto max-w-7xl px-5 sm:px-10">
         <Reveal>
           <p className="kicker">Getting it to you</p>
         </Reveal>
         <Reveal delay={0.06}>
           <h2
             id="logistics-heading"
-            className="font-display mt-5 max-w-2xl text-3xl leading-[1.05] text-fg sm:text-5xl"
+            className="font-display mt-4 max-w-2xl text-[clamp(1.75rem,7vw,2rem)] leading-[1.08] text-balance text-fg sm:mt-5 sm:text-4xl sm:leading-[1.05] lg:text-5xl"
           >
             Addis to Djibouti to your warehouse.
           </h2>
         </Reveal>
         <Reveal delay={0.1}>
-          <p className="mt-7 max-w-2xl text-base leading-relaxed text-muted">
+          <p className="mt-5 max-w-2xl text-[0.9375rem] leading-relaxed text-muted sm:mt-7 sm:text-base">
             Milled and graded in Addis Ababa, trucked down the Djibouti
             corridor, sealed at the port. We handle everything up to the ship's
             rail and the paperwork that follows it.
           </p>
         </Reveal>
 
-        <div className="mt-16 grid gap-14 lg:grid-cols-2 lg:gap-20">
+        <div className="mt-12 grid gap-12 sm:mt-16 lg:grid-cols-2 lg:gap-20">
           <div>
             <h3 className="text-[11px] uppercase tracking-[0.14em] text-faint">
               Transit time from Djibouti
@@ -53,14 +53,22 @@ export default function Logistics() {
             <ul className="mt-6 space-y-px">
               {ROUTES.map((r, i) => (
                 <Reveal as="li" key={r.port} delay={i * 0.05}>
-                  <div className="flex items-center gap-5 border-b border-line py-3.5">
-                    <span className="w-28 shrink-0 text-sm text-fg">{r.port}</span>
-                    <span
-                      className="h-px bg-accent-solid/60"
-                      style={{ width: `${(r.days / 34) * 100}%` }}
-                      aria-hidden
-                    />
-                    <span className="nums ml-auto shrink-0 text-sm text-muted">
+                  <div className="flex items-center gap-3 border-b border-line py-3.5 sm:gap-5">
+                    <span className="w-[5.5rem] shrink-0 text-sm text-fg sm:w-28">
+                      {r.port}
+                    </span>
+                    {/* The bar is a full-width track with a proportional fill
+                        inside it, not a bare percentage-width element. As a
+                        flex item that element shrinks under pressure, and on a
+                        phone every lane ended up the same length — which is
+                        exactly the comparison the row exists to make. */}
+                    <span className="relative h-px flex-1" aria-hidden>
+                      <span
+                        className="absolute inset-y-0 left-0 bg-accent-solid/60"
+                        style={{ width: `${(r.days / 34) * 100}%` }}
+                      />
+                    </span>
+                    <span className="nums shrink-0 text-sm text-muted">
                       <CountUp to={r.days} suffix=" days" />
                     </span>
                   </div>

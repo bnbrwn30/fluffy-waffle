@@ -41,9 +41,9 @@ export default function Forest() {
     <section
       id="forest"
       aria-labelledby="forest-heading"
-      className="relative border-t border-line bg-bg py-20 sm:py-28"
+      className="relative border-t border-line bg-bg py-16 sm:py-20 lg:py-28"
     >
-      <div className="mx-auto max-w-7xl px-6 sm:px-10">
+      <div className="mx-auto max-w-7xl px-5 sm:px-10">
         {/* Headline and lede sit side by side once there is room for both.
             Stacked, the full-width column left a band of dead paper to the
             right of a three-line headline; paired, the whitespace reads as
@@ -56,7 +56,7 @@ export default function Forest() {
 
             <h2
               id="forest-heading"
-              className="font-display mt-4 text-[clamp(2rem,4.6vw,3.5rem)] leading-[1.04] text-balance text-fg"
+              className="font-display mt-4 text-[clamp(1.85rem,7.4vw,3.5rem)] leading-[1.04] text-balance text-fg"
             >
               <RevealLines
                 lines={["Coffee is native to", "Ethiopia, and still", "grows wild here."]}
@@ -65,7 +65,7 @@ export default function Forest() {
           </div>
 
           <Reveal delay={0.1} className="lg:col-span-5">
-            <p className="max-w-prose border-l border-line pl-6 text-[0.9375rem] leading-relaxed text-muted sm:text-base">
+            <p className="max-w-prose border-l border-line pl-4 text-[0.9375rem] leading-relaxed text-muted sm:pl-6 sm:text-base">
               In Kaffa and parts of Guji, coffee still grows semi-wild under
               forest canopy rather than in planted rows. That mix of forest,
               garden and estate production is part of why lots from neighbouring
@@ -74,14 +74,14 @@ export default function Forest() {
           </Reveal>
         </div>
 
-        <dl className="mt-14 grid gap-x-10 gap-y-10 border-t border-line pt-10 sm:mt-16 md:grid-cols-3">
+        <dl className="mt-12 grid gap-x-10 gap-y-9 border-t border-line pt-9 sm:mt-16 sm:gap-y-10 sm:pt-10 md:grid-cols-3">
           {PILLARS.map((p, i) => (
             <Reveal
               key={p.label}
               delay={i * 0.08}
               className="md:not-first:border-l md:not-first:border-line md:not-first:pl-10"
             >
-              <dt className="font-display nums text-[clamp(2.25rem,3.4vw,3rem)] leading-none text-accent">
+              <dt className="font-display nums text-[clamp(2.1rem,6vw,3rem)] leading-none text-accent">
                 <CountUp to={p.n} suffix={p.suffix} />
               </dt>
               <dd className="mt-4">

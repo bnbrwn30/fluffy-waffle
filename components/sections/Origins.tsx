@@ -16,6 +16,21 @@ const pct = (m: number) => ((m - LO) / (HI - LO)) * 100;
  * graphic, not a survey map, and a hand-tuned path stays legible at 320px wide
  * where real border geometry turns to mush.
  */
+/**
+ * Which side of its dot each label hangs off.
+ *
+ * Yirgacheffe, Sidamo and Guji sit within fifty units of each other, so three
+ * labels all set to the right of their dots overlap into mush — worst at phone
+ * widths, where the whole map is 300px across. Pushing the two western ones
+ * left resolves it without moving any dot off its actual position.
+ */
+const LABEL_SIDE: Record<string, "left" | "right"> = {
+  yirgacheffe: "left",
+  sidamo: "left",
+  guji: "right",
+  harrar: "right",
+};
+
 const ETHIOPIA =
   "M150 210 L250 150 L330 130 L400 165 L445 200 L500 235 L575 300 L520 340 " +
   "L470 380 L420 430 L380 480 L330 515 L275 505 L235 470 L190 420 L160 350 " +
@@ -53,13 +68,13 @@ export default function Origins() {
           {/* The real control: a radio group, so it is keyboard-operable. */}
           <fieldset className="shrink-0">
             <legend className="sr-only">Choose a growing region</legend>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {ORIGINS.map((o) => {
                 const on = o.id === activeId;
                 return (
                   <label
                     key={o.id}
-                    className={`cursor-pointer border px-3 py-1.5 text-xs tracking-wide transition-colors duration-[var(--dur-fast)] [transition-timing-function:var(--ease)] ${
+                    className={`flex min-h-11 cursor-pointer items-center border px-3.5 text-[13px] tracking-wide transition-colors duration-[var(--dur-fast)] [transition-timing-function:var(--ease)] ${
                       on
                         ? "border-accent-solid bg-accent-solid text-fg"
                         : "border-line text-muted hover:border-faint hover:text-fg"
@@ -81,14 +96,14 @@ export default function Origins() {
           </fieldset>
         </div>
 
-        <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)] lg:gap-12">
+        <div className="mt-8 grid gap-8 sm:mt-10 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] md:gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)] lg:gap-12">
           {/* --- Map + altitude ------------------------------------------- */}
           <div className="relative">
             {/* viewBox is cropped to the outline itself — the old 0 0 600 600
                 frame padded the map with a third of a screen of empty space. */}
             <svg
               viewBox="125 115 470 420"
-              className="mx-auto w-full max-w-sm lg:max-w-none"
+              className="mx-auto w-full max-w-[19rem] sm:max-w-sm md:max-w-none"
               role="presentation"
               aria-hidden
             >
@@ -124,10 +139,17 @@ export default function Origins() {
                       }}
                     />
                     <text
-                      x={o.map.x + 14}
-                      y={o.map.y + 4}
+                      x={
+                        LABEL_SIDE[o.id] === "left"
+                          ? o.map.x - 13
+                          : o.map.x + 13
+                      }
+                      y={o.map.y + 5}
+                      textAnchor={
+                        LABEL_SIDE[o.id] === "left" ? "end" : "start"
+                      }
                       fill={on ? "var(--fg)" : "var(--faint)"}
-                      fontSize="16"
+                      fontSize="19"
                       style={{ transition: "fill var(--dur-fast) var(--ease)" }}
                     >
                       {o.name}
@@ -231,17 +253,17 @@ function AltitudeBands({
               <button
                 type="button"
                 onClick={() => onPick(o.id)}
-                className="group flex w-full items-center gap-3 text-left"
+                className="group flex min-h-11 w-full items-center gap-2.5 text-left sm:min-h-0 sm:gap-3 sm:py-1"
               >
                 <span
-                  className={`w-20 shrink-0 text-[11px] transition-colors duration-[var(--dur-fast)] [transition-timing-function:var(--ease)] ${
+                  className={`w-[4.5rem] shrink-0 text-[11px] transition-colors lg:w-20 duration-[var(--dur-fast)] [transition-timing-function:var(--ease)] ${
                     on ? "text-fg" : "text-faint group-hover:text-muted"
                   }`}
                 >
                   {o.name}
                 </span>
 
-                <span className="relative h-2 flex-1">
+                <span className="relative h-2 min-w-10 flex-1">
                   <span className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-line" />
                   <span
                     className={`absolute top-1/2 h-[3px] -translate-y-1/2 transition-[background-color] duration-[var(--dur-fast)] [transition-timing-function:var(--ease)] ${
@@ -255,7 +277,7 @@ function AltitudeBands({
                 </span>
 
                 <span
-                  className={`nums w-28 shrink-0 text-right text-[11px] transition-colors duration-[var(--dur-fast)] [transition-timing-function:var(--ease)] ${
+                  className={`nums w-[5.25rem] shrink-0 text-right text-[10px] transition-colors lg:w-28 lg:text-[11px] duration-[var(--dur-fast)] [transition-timing-function:var(--ease)] ${
                     on ? "text-fg" : "text-faint"
                   }`}
                 >

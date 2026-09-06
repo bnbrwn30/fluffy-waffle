@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { BEATS, photoPath } from "@/lib/journey";
@@ -45,6 +45,35 @@ export default function PhotoJourney({
     [available],
   );
 
+  /**
+   * Photographs are held back until the section is roughly a screen away.
+   *
+   * These four frames are the heaviest thing on the page. As inline
+   * `background-image` on server-rendered markup the preload scanner found all
+   * four in the first HTML chunk and fetched them immediately — three quarters
+   * of a megabyte racing the hero for bandwidth, for imagery nobody sees until
+   * they have scrolled past two full sections. The tints render meanwhile, and
+   * a decode that starts one viewport out is comfortably done by the time the
+   * pin engages.
+   */
+  const [loadPhotos, setLoadPhotos] = useState(false);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setLoadPhotos(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "100% 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   useEffect(() => {
     const wrap = wrapRef.current;
     if (!wrap) return;
@@ -87,12 +116,22 @@ export default function PhotoJourney({
 
     gsap.registerPlugin(ScrollTrigger);
 
+    // Mobile browsers resize the viewport as their address bar hides and
+    // shows. Left alone, every one of those resizes refreshes the trigger and
+    // the pinned section jumps under the reader's thumb — so ignore height-only
+    // resizes on touch devices.
+    ScrollTrigger.config({ ignoreMobileResize: true });
+
     const st = ScrollTrigger.create({
       trigger: wrap,
       start: "top top",
       // Roughly one viewport of scroll per beat: long enough to read each one,
       // short enough that it never feels like the page is holding you hostage.
-      end: () => `+=${window.innerHeight * BEATS.length * 0.85}`,
+      // Shorter per-beat travel on a phone: the same 0.85 viewports per beat
+      // is a great deal more thumb-work on a 400px-tall scroll than it is on a
+      // desktop wheel, and the copy is read long before the beat ends.
+      end: () =>
+        `+=${window.innerHeight * BEATS.length * (window.innerWidth < 640 ? 0.62 : 0.85)}`,
       pin: true,
       scrub: 0.6,
       onUpdate: (self) => {
@@ -120,9 +159,10 @@ export default function PhotoJourney({
           style={{
             opacity: 0,
             backgroundColor: beat.tint,
-            backgroundImage: present.has(beat.photo)
-              ? `url(${photoPath(beat)})`
-              : undefined,
+            backgroundImage:
+              loadPhotos && present.has(beat.photo)
+                ? `url(${photoPath(beat)})`
+                : undefined,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}

@@ -1,12 +1,13 @@
-"use client";
-
-import { motion } from "motion/react";
 import Button from "@/components/ui/Button";
 import HeroVideo from "@/components/ui/HeroVideo";
-import { RevealLines } from "@/components/ui/Reveal";
-import { DUR, EASE, STAGGER } from "@/lib/motion";
 
 /**
+ * A server component with no client JavaScript of its own. The entrance runs
+ * on CSS keyframes (see `.enter-*` in globals.css) rather than through the
+ * motion library, because a motion component serialises its `initial` values
+ * into the HTML: the whole hero used to ship invisible and stay that way until
+ * hydration finished. Now it paints and animates straight off the stylesheet.
+ *
  * Above the fold, a buyer gets the claim, the facts and the CTA in plain text.
  * The cinematic below rewards scrolling; it never holds information hostage.
  * Someone who lands, reads three lines and requests a sample in nine seconds
@@ -29,60 +30,67 @@ export default function Hero() {
 
       {/* Paper scrim: keeps the headline legible where it crosses the plate,
           and fades out to the right so the footage is never boxed in. */}
+      {/* Two scrims, one per aspect. The radial plate works on a wide screen,
+          where the copy occupies the left third and the footage stays clear to
+          the right. On a phone the copy runs the full width and the whole lower
+          half needs lifting, so that shape reverses to a vertical wash. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-0"
+        className="pointer-events-none absolute inset-0 -z-0 sm:hidden"
+        style={{
+          background:
+            "linear-gradient(to top, var(--bg) 0%, color-mix(in srgb, var(--bg) 88%, transparent) 46%, color-mix(in srgb, var(--bg) 46%, transparent) 76%, transparent 100%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-0 max-sm:hidden"
         style={{
           background:
             "radial-gradient(75% 65% at 18% 45%, var(--bg) 0%, color-mix(in srgb, var(--bg) 78%, transparent) 52%, transparent 100%)",
         }}
       />
 
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pt-32 pb-14 sm:px-10">
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: DUR.base, ease: EASE }}
-          className="kicker"
-        >
-          Green coffee · Ethiopia
-        </motion.p>
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pt-24 pb-9 sm:px-10 sm:pt-32 sm:pb-14">
+        <p className="kicker enter-fade">Green coffee · Ethiopia</p>
 
-        <h1 className="font-display mt-5 max-w-4xl text-[2.6rem] leading-[0.98] text-fg sm:text-6xl lg:text-7xl">
-          <RevealLines
-            immediate
-            lines={["Specialty green coffee,", "exported from Ethiopia."]}
-          />
+        <h1 className="font-display mt-4 max-w-4xl text-[clamp(1.55rem,7.1vw,2.6rem)] leading-[1.02] text-fg sm:mt-5 sm:text-6xl sm:leading-[0.98] lg:text-7xl">
+          {["Specialty green coffee,", "exported from Ethiopia."].map(
+            (line, i) => (
+              // The mask carries no animation; the line slides up inside it.
+              // Extra bottom padding keeps descenders off the mask edge.
+              <span key={line} className="block overflow-hidden pb-[0.12em]">
+                <span
+                  className={`enter-line block will-change-transform ${
+                    i === 1 ? "enter-d1" : ""
+                  }`}
+                >
+                  {line}
+                </span>
+              </span>
+            ),
+          )}
         </h1>
 
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: DUR.slow, ease: EASE, delay: STAGGER.loose * 3 }}
-          className="mt-6 max-w-lg text-base leading-relaxed text-muted"
+        <p
+          className="enter-rise enter-d3 mt-5 max-w-lg text-[0.9375rem] leading-relaxed text-muted sm:mt-6 sm:text-base"
         >
           We buy from washing stations in Yirgacheffe, Sidamo, Guji and
           Harrar, mill and grade in Addis Ababa, and ship out of Djibouti. Each
           lot stays traceable to the station it came from.
-        </motion.p>
+        </p>
 
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: DUR.slow, ease: EASE, delay: STAGGER.loose * 4 }}
-          className="mt-9 flex flex-wrap gap-3"
+        <div
+          className="enter-rise enter-d4 mt-8 flex flex-col gap-3 xs:flex-row xs:flex-wrap sm:mt-9"
         >
           <Button href="#contact">Request a sample</Button>
           <Button href="#origins" variant="ghost">
             See the origins
           </Button>
-        </motion.div>
+        </div>
 
-        <motion.dl
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: DUR.slow, ease: EASE, delay: STAGGER.loose * 5 }}
-          className="mt-14 grid grid-cols-2 gap-x-8 gap-y-6 border-t border-line pt-8 lg:grid-cols-4"
+        <dl
+          className="enter-fade enter-d5 mt-10 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-line pt-7 sm:mt-14 sm:gap-x-8 sm:gap-y-6 sm:pt-8 lg:grid-cols-4"
         >
           {FACTS.map((f) => (
             <div key={f.k}>
@@ -92,7 +100,7 @@ export default function Hero() {
               <dd className="mt-1.5 text-sm text-fg">{f.v}</dd>
             </div>
           ))}
-        </motion.dl>
+        </dl>
       </div>
     </section>
   );

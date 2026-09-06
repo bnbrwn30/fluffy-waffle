@@ -1,8 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { DUR, EASE, STAGGER } from "@/lib/motion";
+import { STAGGER } from "@/lib/motion";
 
 /**
  * True once the element is on screen — or immediately, if it already was when
@@ -35,26 +34,55 @@ function useShown(ref: React.RefObject<HTMLElement | null>) {
       return;
     }
 
+    let done = false;
+    const reveal = () => {
+      if (done) return;
+      done = true;
+      setShown(true);
+      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      window.clearTimeout(bail);
+    };
+
     const io = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setShown(true);
-          io.disconnect();
-        }
+        if (entry.isIntersecting) reveal();
       },
       { rootMargin: "0px 0px -8% 0px" },
     );
     io.observe(el);
 
-    // Last resort. If the observer has still said nothing by the time a reader
-    // could plausibly have scrolled here, show the content anyway — never trade
+    /**
+     * A geometry backstop, checked on every scroll.
+     *
+     * The observer is the primary trigger and usually the only one that ever
+     * fires. But it is not a guarantee: IntersectionObserver delivers on the
+     * render steps, and a page that is offscreen, backgrounded, or simply
+     * starved on a slow device can go a long time without one — and a Reveal
+     * whose callback never arrives stays at opacity 0 forever. That is how the
+     * whole lot panel in Quality — sack, cupping radar and spec table — could
+     * sit dead centre of the viewport and render as blank paper.
+     *
+     * Measuring a rect on a passive scroll listener costs nothing next to
+     * losing a section, and both paths run through `reveal()`, so whichever
+     * arrives first tears down the other.
+     */
+    const onScroll = () => {
+      if (onScreen()) reveal();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+
+    // Final fallback. If neither path has spoken by the time a reader could
+    // plausibly have scrolled here, show the content anyway — never trade
     // legibility for an entrance.
-    const bail = window.setTimeout(() => {
-      if (onScreen()) setShown(true);
-    }, 2500);
+    const bail = window.setTimeout(onScroll, 2500);
 
     return () => {
       io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
       window.clearTimeout(bail);
     };
   }, [ref]);
@@ -73,6 +101,17 @@ type Props = {
 /**
  * The standard entrance for anything that is not scroll-scrubbed: rise and
  * fade, on the site curve.
+ *
+ * The trigger is JavaScript; the animation is not. It used to be a motion
+ * component, which meant the entrance was interpolated frame by frame on
+ * requestAnimationFrame — and anything that starves rAF (a background tab, a
+ * throttled or offscreen renderer, a phone under load) left the element parked
+ * on its `initial` values with no way out. Whole sections rendered as blank
+ * paper: the Quality lot panel, sack and cupping radar included.
+ *
+ * A CSS keyframe runs on the compositor instead. Once the class is on, the
+ * entrance plays whatever else the main thread is doing, and the end state is
+ * declarative rather than something a running animation has to reach.
  */
 export default function Reveal({
   children,
@@ -82,25 +121,13 @@ export default function Reveal({
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const shown = useShown(ref);
-  const reduced = useReducedMotion();
-  const Tag = motion[as];
-
-  if (reduced) {
-    const Plain = as;
-    return (
-      <Plain className={className} ref={ref as never}>
-        {children}
-      </Plain>
-    );
-  }
+  const Tag = as;
 
   return (
     <Tag
       ref={ref as never}
-      className={className}
-      initial={{ opacity: 0, y: 24 }}
-      animate={shown ? { opacity: 1, y: 0 } : undefined}
-      transition={{ duration: DUR.base, ease: EASE, delay }}
+      className={`reveal${shown ? " reveal-in" : ""}${className ? ` ${className}` : ""}`}
+      style={delay ? { animationDelay: `${delay}s` } : undefined}
     >
       {children}
     </Tag>
@@ -126,8 +153,7 @@ export function RevealLines({
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useShown(ref);
-  const reduced = useReducedMotion();
-  const shown = immediate || inView || reduced;
+  const shown = immediate || inView;
 
   return (
     <span className={className} ref={ref}>
@@ -139,18 +165,14 @@ export function RevealLines({
         // headline hidden forever. The extra bottom padding keeps descenders
         // out of the mask edge.
         <span key={line} className="block overflow-hidden pb-[0.12em]">
-          <motion.span
-            className={`block will-change-transform ${lineClassName ?? ""}`}
-            initial={reduced ? false : { y: "110%" }}
-            animate={shown ? { y: "0%" } : undefined}
-            transition={{
-              duration: DUR.slow,
-              ease: EASE,
-              delay: i * STAGGER.base,
-            }}
+          <span
+            className={`reveal-line${shown ? " reveal-in" : ""} block will-change-transform ${
+              lineClassName ?? ""
+            }`}
+            style={i ? { animationDelay: `${i * STAGGER.base}s` } : undefined}
           >
             {line}
-          </motion.span>
+          </span>
         </span>
       ))}
     </span>

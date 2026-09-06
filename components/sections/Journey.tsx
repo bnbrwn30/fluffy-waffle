@@ -46,8 +46,8 @@ export default function Journey({ available }: { available: string[] }) {
             Kept out of the transformed layers, so changing beat never touches
             the elements being animated on scroll. */}
         <div className="pointer-events-none absolute inset-0 z-10 flex items-end">
-          <div className="mx-auto w-full max-w-7xl px-6 pb-16 sm:px-10 lg:pb-24">
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <div className="mx-auto w-full max-w-7xl px-5 pb-12 sm:px-10 sm:pb-16 lg:pb-24">
+            <div className="grid gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={beat.id}
@@ -58,10 +58,10 @@ export default function Journey({ available }: { available: string[] }) {
                   className="max-w-xl"
                 >
                   <p className="kicker">{beat.kicker}</p>
-                  <p className="font-display mt-3 text-3xl leading-[1.1] text-fg sm:text-4xl lg:text-5xl">
+                  <p className="font-display mt-2.5 text-[clamp(1.6rem,7.4vw,2rem)] leading-[1.12] text-balance text-fg sm:mt-3 sm:text-4xl sm:leading-[1.1] lg:text-5xl">
                     {beat.headline}
                   </p>
-                  <p className="mt-4 text-sm leading-relaxed text-muted sm:text-base">
+                  <p className="mt-3 text-[0.8125rem] leading-relaxed text-muted sm:mt-4 sm:text-base">
                     {beat.body}
                   </p>
                 </motion.div>
@@ -75,9 +75,9 @@ export default function Journey({ available }: { available: string[] }) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -12 }}
                     transition={{ duration: DUR.base, ease: EASE, delay: 0.06 }}
-                    className="border-l border-line pl-5 lg:pl-6"
+                    className="border-t border-line pt-4 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6"
                   >
-                    <p className="font-display nums text-4xl text-accent lg:text-5xl">
+                    <p className="font-display nums text-3xl text-accent sm:text-4xl lg:text-5xl">
                       {beat.stat.value}
                     </p>
                     <p className="mt-1 max-w-[16rem] text-xs leading-snug text-faint">
@@ -89,7 +89,7 @@ export default function Journey({ available }: { available: string[] }) {
             </div>
 
             {/* Progress rail — nine ticks, one per beat. */}
-            <div className="mt-10 flex items-center gap-2" aria-hidden>
+            <div className="mt-7 flex items-center gap-1.5 sm:mt-10 sm:gap-2" aria-hidden>
               {BEATS.map((b, i) => (
                 <span
                   key={b.id}

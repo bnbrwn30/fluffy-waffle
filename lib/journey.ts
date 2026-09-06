@@ -99,5 +99,5 @@ export function beatIndexAt(p: number): number {
 
 /** Public path for a beat's photograph. */
 export function photoPath(beat: Beat): string {
-  return `/img/journey/${beat.photo}.jpg`;
+  return `/img/journey/${beat.photo}.webp`;
 }
