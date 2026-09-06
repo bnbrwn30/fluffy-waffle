@@ -187,11 +187,17 @@ export default function Origins() {
                   {active.altitude[0].toLocaleString()}–
                   {active.altitude[1].toLocaleString()} m
                 </Field>
-                <Field label="Cup score">{active.cupScore.toFixed(1)}</Field>
+                <Field label="Cup range">
+                  {active.cupScore[0]}–{active.cupScore[1]} SCA
+                </Field>
                 <Field label="Harvest">{active.harvest}</Field>
+                <Field label="Screen">{active.screen}</Field>
+                <Field label="Density">
+                  {active.density[0]}–{active.density[1]} g/L
+                </Field>
                 <Field label="Process">{active.processes.join(" · ")}</Field>
                 <Field label="Varietal">{active.varietal}</Field>
-                <Field label="Grades">{active.grades.join(", ")}</Field>
+                <Field label="ECX grades">{active.grades.join(", ")}</Field>
               </dl>
 
               {/* Tasting notes read as one line of chips next to their label,
@@ -209,6 +215,13 @@ export default function Origins() {
                   </span>
                 ))}
               </div>
+
+              <p className="mt-4 text-[10px] leading-snug text-faint">
+                Typical ranges for the region, not a quote for a single lot.
+                Screen sizes are ECX, in 1/64 inch; density is free-flow bulk
+                density per ISO 6669; cup range is the SCA 100-point scale.
+                Every shipping lot goes out with its own analysis certificate.
+              </p>
             </motion.div>
           </AnimatePresence>
         </div>

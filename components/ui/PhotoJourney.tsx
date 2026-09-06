@@ -78,6 +78,35 @@ export default function PhotoJourney({
     const wrap = wrapRef.current;
     if (!wrap) return;
 
+    /**
+     * The pinned frame is sized to the live viewport, in pixels, rather than
+     * left to `h-svh`.
+     *
+     * `svh` is the SMALLEST viewport height — the one with the mobile toolbar
+     * showing — and ScrollTrigger freezes whatever it measures at pin time into
+     * an inline height. So once the toolbar collapses on the first scroll the
+     * frame stops reaching the bottom of the screen and the page's own dark
+     * ground shows through as a band under the photograph. Writing
+     * `innerHeight` and re-writing it whenever the toolbar moves keeps the
+     * image full-bleed; the trigger itself is deliberately not refreshed
+     * (see `ignoreMobileResize` below), so the pin never jumps.
+     */
+    const fitViewport = () => {
+      // `maxHeight` as well as `height`: pinning writes the measured height
+      // into BOTH, and the max-height alone is enough to keep the frame short.
+      wrap.style.height = `${window.innerHeight}px`;
+      wrap.style.maxHeight = `${window.innerHeight}px`;
+    };
+    // Once now and once after the frame settles — ScrollTrigger's own resize
+    // handler is registered after this one and re-stamps the old measurement.
+    const refit = () => {
+      fitViewport();
+      requestAnimationFrame(fitViewport);
+    };
+    fitViewport();
+    window.addEventListener("resize", refit);
+    window.visualViewport?.addEventListener("resize", refit);
+
     const n = BEATS.length;
     /** Fraction of one beat's window spent cross-fading into the next. */
     const FADE = 0.32;
@@ -111,7 +140,10 @@ export default function PhotoJourney({
     if (prefersReducedMotion()) {
       // No pin and no scrub: the section collapses to its first frame and the
       // beat copy below carries the story instead.
-      return;
+      return () => {
+        window.removeEventListener("resize", refit);
+        window.visualViewport?.removeEventListener("resize", refit);
+      };
     }
 
     gsap.registerPlugin(ScrollTrigger);
@@ -140,7 +172,11 @@ export default function PhotoJourney({
       },
     });
 
-    return () => st.kill();
+    return () => {
+      st.kill();
+      window.removeEventListener("resize", refit);
+      window.visualViewport?.removeEventListener("resize", refit);
+    };
   }, [onProgress]);
 
   return (

@@ -2,9 +2,13 @@
  * The four growing regions. Single source of truth — the map, the data cards,
  * the offer list and the Blender still filenames all read from here.
  *
- * Region-level figures (altitude bands, processing, harvest windows) reflect
- * widely published characteristics of each origin. Anything lot-specific or
- * company-specific is marked VERIFY and must be confirmed before launch.
+ * Region-level figures (altitude bands, screen sizes, density, harvest windows
+ * and cupping ranges) are the widely published characteristics of each origin,
+ * expressed as ranges rather than single figures — a region does not have one
+ * cup score, and pretending otherwise is the first thing an experienced buyer
+ * spots. Screen numbers are ECX sizes in 1/64 inch; density is free-flow bulk
+ * density per ISO 6669. Anything lot-specific or company-specific is marked
+ * VERIFY and must be confirmed before launch.
  */
 
 export type Origin = {
@@ -17,8 +21,17 @@ export type Origin = {
   varietal: string;
   /** Harvest window, human readable. */
   harvest: string;
-  /** SCA cupping score. VERIFY per crop year. */
-  cupScore: number;
+  /**
+   * Typical SCA cupping range for the region, low to high — not a promise for
+   * any one lot. A single decimal score at region level would be a fiction;
+   * a band is what the trade actually publishes, and it is the honest thing to
+   * put in front of a buyer who will cup a sample anyway.
+   */
+  cupScore: [number, number];
+  /** Typical ECX screen sizes, in 1/64 inch. Screen 14 = 5.6 mm, 18 = 7.1 mm. */
+  screen: string;
+  /** Typical free-flow bulk density band, g/L (ISO 6669). Height reads here. */
+  density: [number, number];
   grades: string[];
   notes: string[];
   /** One line of why a buyer would pick this region. */
@@ -33,12 +46,14 @@ export const ORIGINS: Origin[] = [
   {
     id: "yirgacheffe",
     name: "Yirgacheffe",
-    zone: "Gedeo, SNNPR",
+    zone: "Gedeo, South Ethiopia",
     altitude: [1750, 2200],
     processes: ["Fully washed", "Natural"],
     varietal: "Ethiopian heirloom",
     harvest: "October – January",
-    cupScore: 87.5, // VERIFY per crop year
+    cupScore: [85, 88],
+    screen: "14–16 (5.6–6.35 mm)",
+    density: [700, 740],
     grades: ["G1", "G2"],
     notes: ["Bergamot", "Jasmine", "Lemon zest", "Black tea"],
     pitch:
@@ -55,7 +70,9 @@ export const ORIGINS: Origin[] = [
     processes: ["Fully washed", "Natural"],
     varietal: "Ethiopian heirloom",
     harvest: "October – January",
-    cupScore: 86.5, // VERIFY per crop year
+    cupScore: [84, 87],
+    screen: "14–16 (5.6–6.35 mm)",
+    density: [690, 730],
     grades: ["G1", "G2", "G3"],
     notes: ["Ripe berry", "Citrus", "Milk chocolate", "Round body"],
     pitch:
@@ -72,7 +89,9 @@ export const ORIGINS: Origin[] = [
     processes: ["Natural", "Fully washed"],
     varietal: "Ethiopian heirloom",
     harvest: "October – February",
-    cupScore: 88.0, // VERIFY per crop year
+    cupScore: [86, 89],
+    screen: "15–17 (6.0–6.75 mm)",
+    density: [710, 750],
     grades: ["G1"],
     notes: ["Stone fruit", "Peach", "Florals", "Syrupy"],
     pitch:
@@ -84,12 +103,14 @@ export const ORIGINS: Origin[] = [
   {
     id: "harrar",
     name: "Harrar",
-    zone: "Eastern Highlands",
+    zone: "Hararghe, Oromia",
     altitude: [1500, 2100],
     processes: ["Natural (dry)"],
     varietal: "Heirloom longberry",
     harvest: "October – February",
-    cupScore: 85.0, // VERIFY per crop year
+    cupScore: [83, 86],
+    screen: "15–18 (6.0–7.1 mm)",
+    density: [660, 700],
     grades: ["G4", "G5"],
     notes: ["Blueberry", "Red wine", "Warm spice", "Heavy body"],
     pitch:

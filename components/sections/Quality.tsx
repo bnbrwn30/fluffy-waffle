@@ -15,8 +15,16 @@ import Reveal from "@/components/ui/Reveal";
  * The radar is a hand-rolled SVG — one polygon and six axes. A charting
  * dependency would cost more bundle than this whole section.
  *
- * Scores and specs are illustrative. VERIFY every field against the cupping
- * sheets and pre-shipment analysis for the crop year before launch.
+ * Two different kinds of number live in here, and the distinction matters:
+ *
+ *  - The per-lot readings (moisture, water activity, density, defect count)
+ *    are illustrative. VERIFY every one against the pre-shipment analysis and
+ *    cupping sheets for the crop year before launch.
+ *  - The SPEC ranges they are plotted against are real, published thresholds,
+ *    each carrying the standard and method it comes from. Those are what turn
+ *    a table of figures into an argument a green buyer can check: it is not
+ *    "our moisture is 10.4%", it is "10.4% against a 9–12.5% specialty band,
+ *    measured the way ISO 6673 says to measure it".
  */
 
 const AXIS_LABELS = ["Aroma", "Flavour", "Aftertaste", "Acidity", "Body", "Balance"] as const;
@@ -31,9 +39,15 @@ type Lot = {
   harvest: string;
   grade: string;
   screen: string;
-  moisture: string;
-  defects: string;
   score: number;
+  /** Pre-shipment analysis. Plotted against SPEC, so these stay numeric. */
+  moisture: number;
+  /** Water activity, aw. */
+  water: number;
+  /** Free-flow bulk density, g/L (ISO 6669). */
+  density: number;
+  /** Full defect equivalents per 300 g sample (SCA green grading protocol). */
+  defects: number;
   bags: string;
   notes: string;
   /** Cupping attributes, in AXIS_LABELS order. */
@@ -51,11 +65,13 @@ const LOTS: Lot[] = [
     varietal: "Heirloom 74110",
     altitude: "1,950–2,150 m",
     harvest: "Nov 24 – Jan 25",
-    grade: "G1",
-    screen: "15+",
-    moisture: "10.4%",
-    defects: "0 primary",
+    grade: "G1 · ECX Q1",
+    screen: "15–17 (6.0–6.75 mm)",
     score: 88.0,
+    moisture: 10.4,
+    water: 0.55,
+    density: 716,
+    defects: 2,
     bags: "160 × 60 kg",
     notes: "Blueberry · jasmine · dark chocolate",
     scores: [8.75, 8.5, 8.25, 8.75, 8.0, 8.5],
@@ -69,11 +85,13 @@ const LOTS: Lot[] = [
     varietal: "Heirloom 74112",
     altitude: "1,900–2,100 m",
     harvest: "Nov 24 – Jan 25",
-    grade: "G1",
-    screen: "15+",
-    moisture: "10.6%",
-    defects: "0 primary",
+    grade: "G1 · ECX Q1",
+    screen: "15–17 (6.0–6.75 mm)",
     score: 87.5,
+    moisture: 10.6,
+    water: 0.56,
+    density: 728,
+    defects: 1,
     bags: "320 × 60 kg",
     notes: "Bergamot · white peach · black tea",
     scores: [8.5, 8.5, 8.25, 8.75, 7.75, 8.25],
@@ -87,11 +105,13 @@ const LOTS: Lot[] = [
     varietal: "Heirloom 74158",
     altitude: "1,850–2,050 m",
     harvest: "Dec 24 – Feb 25",
-    grade: "G1",
-    screen: "15+",
-    moisture: "10.5%",
-    defects: "0 primary",
+    grade: "G1 · ECX Q1",
+    screen: "15–16 (6.0–6.35 mm)",
     score: 87.0,
+    moisture: 10.5,
+    water: 0.55,
+    density: 722,
+    defects: 3,
     bags: "640 × 60 kg",
     notes: "Red apple · caramel · jasmine",
     scores: [8.5, 8.25, 8.25, 8.5, 8.0, 8.25],
@@ -105,15 +125,86 @@ const LOTS: Lot[] = [
     varietal: "Wollega heirloom",
     altitude: "1,750–2,000 m",
     harvest: "Nov 24 – Jan 25",
-    grade: "G1",
-    screen: "15+",
-    moisture: "10.7%",
-    defects: "0 primary",
+    grade: "G1 · ECX Q1",
+    screen: "14–16 (5.6–6.35 mm)",
     score: 87.25,
+    moisture: 10.7,
+    water: 0.57,
+    density: 705,
+    defects: 4,
     bags: "480 × 60 kg",
     notes: "Cocoa · ripe apricot · sweet spice",
     scores: [8.5, 8.25, 8.25, 8.25, 8.5, 8.25],
     image: "/img/bags/nekemte.webp",
+  },
+];
+
+/**
+ * The published thresholds each reading is judged against.
+ *
+ * `lo`/`hi` are the ends of the plotted axis, not the pass band — the band is
+ * `okLo`/`okHi`, and it is drawn as a shaded zone so a reading sitting inside
+ * it is legible at a glance without anyone reading a number. `ref` is the
+ * standard the band comes from; it is printed, because an unattributed
+ * threshold is just another number we made up.
+ */
+type Spec = {
+  k: string;
+  unit: string;
+  lo: number;
+  hi: number;
+  okLo: number;
+  okHi: number;
+  /** Decimal places when printing the reading. */
+  dp: number;
+  ref: string;
+  get: (l: Lot) => number;
+};
+
+const SPEC: Spec[] = [
+  {
+    k: "Moisture",
+    unit: "%",
+    lo: 8,
+    hi: 14,
+    okLo: 9,
+    okHi: 12.5,
+    dp: 1,
+    ref: "SCA green grading 9–12.5% · measured per ISO 6673",
+    get: (l) => l.moisture,
+  },
+  {
+    k: "Water activity",
+    unit: "aw",
+    lo: 0.4,
+    hi: 0.75,
+    okLo: 0.4,
+    okHi: 0.6,
+    dp: 2,
+    ref: "≤ 0.60 aw — the storage threshold below which mould growth stalls",
+    get: (l) => l.water,
+  },
+  {
+    k: "Bulk density",
+    unit: "g/L",
+    lo: 600,
+    hi: 800,
+    okLo: 680,
+    okHi: 780,
+    dp: 0,
+    ref: "Free-flow bulk density, ISO 6669 · high-grown arabica runs dense",
+    get: (l) => l.density,
+  },
+  {
+    k: "Full defects",
+    unit: "/ 300 g",
+    lo: 0,
+    hi: 12,
+    okLo: 0,
+    okHi: 5,
+    dp: 0,
+    ref: "SCA specialty: max 5 full defects, zero category 1 · ECX G1 ≤ 3",
+    get: (l) => l.defects,
   },
 ];
 
@@ -371,8 +462,6 @@ export default function Quality() {
                 {[
                   ["Grade", lot.grade],
                   ["Screen", lot.screen],
-                  ["Moisture", lot.moisture],
-                  ["Defects", lot.defects],
                   ["Varietal", lot.varietal],
                   ["Harvest", lot.harvest],
                   ["Available", lot.bags],
@@ -383,6 +472,18 @@ export default function Quality() {
                   </div>
                 ))}
               </dl>
+
+              {/* --- Analysis against the published spec ------------------- */}
+              <div className="mt-5 border-t border-line pt-4">
+                <p className="text-[10px] uppercase tracking-[0.14em] text-faint">
+                  Pre-shipment analysis vs. standard
+                </p>
+                <ul className="mt-3 space-y-3">
+                  {SPEC.map((sp) => (
+                    <SpecRow key={sp.k} spec={sp} lot={lot} />
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         </Reveal>
@@ -396,5 +497,50 @@ export default function Quality() {
         </Reveal>
       </div>
     </section>
+  );
+}
+
+/**
+ * One reading plotted on its own axis, with the pass band shaded behind it.
+ *
+ * The band is the point of the row: a bare "0.55 aw" means nothing to a
+ * roaster who does not carry the threshold in their head, whereas a marker
+ * sitting inside a shaded zone labelled with the standard it comes from reads
+ * instantly and survives being checked.
+ */
+function SpecRow({ spec, lot }: { spec: Spec; lot: Lot }) {
+  const value = spec.get(lot);
+  const at = (v: number) =>
+    `${Math.min(100, Math.max(0, ((v - spec.lo) / (spec.hi - spec.lo)) * 100))}%`;
+  const inSpec = value >= spec.okLo && value <= spec.okHi;
+
+  return (
+    <li>
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-[11px] text-muted">{spec.k}</span>
+        <span className="nums text-[13px] text-fg">
+          {value.toFixed(spec.dp)}
+          <span className="ml-1 text-[10px] text-faint">{spec.unit}</span>
+        </span>
+      </div>
+
+      <div className="relative mt-1.5 h-1.5" aria-hidden>
+        <span className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-line" />
+        {/* Pass band. */}
+        <span
+          className="absolute inset-y-0 bg-accent-solid/12"
+          style={{ left: at(spec.okLo), right: `calc(100% - ${at(spec.okHi)})` }}
+        />
+        {/* The reading. */}
+        <span
+          className={`absolute top-1/2 h-2.5 w-px -translate-x-1/2 -translate-y-1/2 ${
+            inSpec ? "bg-accent-solid" : "bg-fg"
+          }`}
+          style={{ left: at(value) }}
+        />
+      </div>
+
+      <p className="mt-1 text-[10px] leading-snug text-faint">{spec.ref}</p>
+    </li>
   );
 }
