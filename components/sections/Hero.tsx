@@ -24,7 +24,15 @@ export default function Hero() {
   return (
     <section
       id="top"
-      className="relative isolate flex min-h-svh flex-col justify-end overflow-hidden bg-bg"
+      // Not a full `min-h-svh` on a phone. The copy block runs ~640px, so a
+      // 956px hero left 250px of flex slack above it that the footage could
+      // not fill: 1280x720 landscape object-cover'd into a 440-wide portrait
+      // box scales to 1700px wide and shows a quarter of the frame at 1.33x,
+      // which reads as a pale smear rather than coffee. Trimming the height
+      // turns that band into a deliberate cinematic edge and tightens the crop
+      // at the same time. Desktop is landscape-on-landscape and keeps the
+      // full viewport.
+      className="relative isolate flex min-h-[84svh] flex-col justify-end overflow-hidden bg-bg sm:min-h-svh"
     >
       <HeroVideo />
 
@@ -39,7 +47,11 @@ export default function Hero() {
         className="pointer-events-none absolute inset-0 -z-0 sm:hidden"
         style={{
           background:
-            "linear-gradient(to top, var(--bg) 0%, color-mix(in srgb, var(--bg) 88%, transparent) 46%, color-mix(in srgb, var(--bg) 46%, transparent) 76%, transparent 100%)",
+            // Stops pushed up to match the shorter hero. Tuned for 956px, the
+            // wash was still 46% opaque three quarters of the way up — which
+            // is the one band with no copy in it to protect, so it veiled the
+            // footage for nothing. It now clears above the headline.
+            "linear-gradient(to top, var(--bg) 0%, color-mix(in srgb, var(--bg) 90%, transparent) 54%, color-mix(in srgb, var(--bg) 38%, transparent) 84%, transparent 100%)",
         }}
       />
       <div
