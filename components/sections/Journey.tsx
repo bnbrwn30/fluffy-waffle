@@ -45,7 +45,10 @@ export default function Journey({ available }: { available: string[] }) {
         {/* Passed as children so the pin covers copy and imagery together.
             Kept out of the transformed layers, so changing beat never touches
             the elements being animated on scroll. */}
-        <div className="pointer-events-none absolute inset-0 z-10 flex items-end">
+        {/* Bottom edge is held off `--jv-inset` — the strip of the frame the
+            mobile toolbar is currently covering — so the copy never slides
+            under it. Zero once the toolbar is gone, and on desktop. */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 bottom-[var(--jv-inset,0px)] z-10 flex items-end">
           <div className="mx-auto w-full max-w-7xl px-5 pb-12 sm:px-10 sm:pb-16 lg:pb-24">
             <div className="grid gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
               <AnimatePresence mode="wait">

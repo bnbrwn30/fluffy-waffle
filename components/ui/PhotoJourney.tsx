@@ -80,23 +80,63 @@ export default function PhotoJourney({
     if (!wrap) return;
 
     /**
-     * The pinned frame is sized to the live viewport, in pixels, rather than
-     * left to `h-svh`.
+     * The pinned frame is sized to the LARGEST viewport, in pixels, rather
+     * than left to `h-svh`.
      *
      * `svh` is the SMALLEST viewport height — the one with the mobile toolbar
      * showing — and ScrollTrigger freezes whatever it measures at pin time into
-     * an inline height. So once the toolbar collapses on the first scroll the
-     * frame stops reaching the bottom of the screen and the page's own dark
-     * ground shows through as a band under the photograph. Writing
-     * `innerHeight` and re-writing it whenever the toolbar moves keeps the
-     * image full-bleed; the trigger itself is deliberately not refreshed
-     * (see `ignoreMobileResize` below), so the pin never jumps.
+     * an inline height. So once the toolbar collapses the frame stops reaching
+     * the bottom of the screen and the page's own dark ground shows through as
+     * a band under the photograph.
+     *
+     * Tracking `innerHeight` live is not enough either: scrolling up on a
+     * phone grows the viewport without reliably firing a `resize`, so the
+     * frame keeps the short measurement and the band comes back. Sizing to
+     * `lvh` — the toolbar-hidden height — means the frame is never too short in
+     * any toolbar state; it is only ever too tall by the toolbar's own height,
+     * and `overflow-hidden` swallows that. The copy is then held off that
+     * hidden strip by `--jv-inset` so it stays on screen either way. The
+     * trigger itself is deliberately not refreshed (see `ignoreMobileResize`
+     * below), so the pin never jumps.
      */
+    let tallest = window.innerHeight;
+    /** `100lvh` in pixels, measured off a probe so it survives inline sizing. */
+    const measureLvh = () => {
+      const probe = document.createElement("div");
+      probe.style.cssText =
+        "position:absolute;top:0;left:0;width:0;height:100lvh;pointer-events:none;visibility:hidden";
+      document.body.appendChild(probe);
+      const h = probe.getBoundingClientRect().height;
+      probe.remove();
+      // Older engines without `lvh` measure 0; the tallest height we have seen
+      // is the best stand-in for the toolbar-hidden one.
+      return h > 0 ? h : tallest;
+    };
+
+    /** Frame height in px. Only a real resize can change it. */
+    let frame = 0;
+
+    /**
+     * How much of the frame the toolbar is currently covering, for the copy to
+     * sit above. Cheap enough to run on every scroll: one `innerHeight` read
+     * and, only when the number actually changed, one custom-property write.
+     */
+    let inset = -1;
+    const fitInset = () => {
+      const next = Math.max(0, Math.round(frame - window.innerHeight));
+      if (next === inset) return;
+      inset = next;
+      wrap.style.setProperty("--jv-inset", `${next}px`);
+    };
+
     const fitViewport = () => {
+      tallest = Math.max(tallest, window.innerHeight);
+      frame = Math.max(measureLvh(), tallest);
       // `maxHeight` as well as `height`: pinning writes the measured height
       // into BOTH, and the max-height alone is enough to keep the frame short.
-      wrap.style.height = `${window.innerHeight}px`;
-      wrap.style.maxHeight = `${window.innerHeight}px`;
+      wrap.style.height = `${frame}px`;
+      wrap.style.maxHeight = `${frame}px`;
+      fitInset();
     };
     // Once now and once after the frame settles — ScrollTrigger's own resize
     // handler is registered after this one and re-stamps the old measurement.
@@ -107,6 +147,11 @@ export default function PhotoJourney({
     fitViewport();
     window.addEventListener("resize", refit);
     window.visualViewport?.addEventListener("resize", refit);
+    // The toolbar slides away mid-scroll without firing either resize event on
+    // some engines, so keep the inset honest as the page moves too. The frame
+    // itself is left alone here — it is already tall enough for every toolbar
+    // state, and re-measuring it per scroll would cost a layout a frame.
+    window.addEventListener("scroll", fitInset, { passive: true });
 
     const n = BEATS.length;
     /** Fraction of one beat's window spent cross-fading into the next. */
@@ -153,6 +198,7 @@ export default function PhotoJourney({
       return () => {
         window.removeEventListener("resize", refit);
         window.visualViewport?.removeEventListener("resize", refit);
+        window.removeEventListener("scroll", fitInset);
       };
     }
 
@@ -186,13 +232,14 @@ export default function PhotoJourney({
       st.kill();
       window.removeEventListener("resize", refit);
       window.visualViewport?.removeEventListener("resize", refit);
+      window.removeEventListener("scroll", fitInset);
     };
   }, [onProgress]);
 
   return (
     <div
       ref={wrapRef}
-      className={`relative h-svh w-full overflow-hidden bg-bg ${className ?? ""}`}
+      className={`relative h-lvh w-full overflow-hidden bg-bg ${className ?? ""}`}
     >
       {BEATS.map((beat, i) => (
         <div

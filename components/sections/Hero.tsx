@@ -51,7 +51,11 @@ export default function Hero() {
             // wash was still 46% opaque three quarters of the way up — which
             // is the one band with no copy in it to protect, so it veiled the
             // footage for nothing. It now clears above the headline.
-            "linear-gradient(to top, var(--bg) 0%, color-mix(in srgb, var(--bg) 90%, transparent) 54%, color-mix(in srgb, var(--bg) 38%, transparent) 84%, transparent 100%)",
+            //
+            // Thinned across the board so the plate shows through: the base
+            // stays fully opaque only at the very bottom edge, where the facts
+            // grid sits on small type, and drops away faster above it.
+            "linear-gradient(to top, var(--bg) 0%, color-mix(in srgb, var(--bg) 72%, transparent) 40%, color-mix(in srgb, var(--bg) 44%, transparent) 62%, color-mix(in srgb, var(--bg) 16%, transparent) 84%, transparent 100%)",
         }}
       />
       <div
