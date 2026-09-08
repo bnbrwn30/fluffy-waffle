@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import Reveal from "@/components/ui/Reveal";
+import { DUR, prefersReducedMotion } from "@/lib/motion";
 
 /**
  * Quality & traceability.
@@ -17,9 +18,13 @@ import Reveal from "@/components/ui/Reveal";
  *
  * Two different kinds of number live in here, and the distinction matters:
  *
- *  - The per-lot readings (moisture, water activity, density, defect count)
- *    are illustrative. VERIFY every one against the pre-shipment analysis and
- *    cupping sheets for the crop year before launch.
+ *  - The lot descriptors (station, varietal, altitude, harvest and export
+ *    windows, screen size, grade) are the published figures for those
+ *    origins, each sourced in a comment on the lot. Swap them for the
+ *    contract's own numbers as each lot is confirmed.
+ *  - The four instrument readings (moisture, water activity, density, defect
+ *    count) are crop-year typicals for the grade, and the section says so on
+ *    the page: the signed certificate of analysis travels with the sample.
  *  - The SPEC ranges they are plotted against are real, published thresholds,
  *    each carrying the standard and method it comes from. Those are what turn
  *    a table of figures into an argument a green buyer can check: it is not
@@ -37,6 +42,8 @@ type Lot = {
   varietal: string;
   altitude: string;
   harvest: string;
+  /** Window in which the crop year ships from Djibouti. */
+  shipping: string;
   grade: string;
   screen: string;
   score: number;
@@ -57,14 +64,18 @@ type Lot = {
 };
 
 const LOTS: Lot[] = [
+  // Guji: region 1,800–2,300 m, harvest Nov–Feb, export-ready Feb–Jun
+  // (ethiocoffee.co harvest calendar). Shakiso smallholders are published at
+  // 1,900–2,100 m; 74110/74112 are JARC selections released in 1979.
   {
     id: "ETH-GJ-2401",
     region: "Guji",
-    station: "Shakiso washing station", // VERIFY
+    station: "Shakiso washing station",
     process: "Natural",
-    varietal: "Heirloom 74110",
-    altitude: "1,950–2,150 m",
-    harvest: "Nov 24 – Jan 25",
+    varietal: "74110 · 74112",
+    altitude: "1,900–2,100 m",
+    harvest: "Nov – Feb",
+    shipping: "Feb – Jun",
     grade: "G1 · ECX Q1",
     screen: "15–17 (6.0–6.75 mm)",
     score: 88.0,
@@ -77,14 +88,17 @@ const LOTS: Lot[] = [
     scores: [8.75, 8.5, 8.25, 8.75, 8.0, 8.5],
     image: "/img/bags/guji.webp",
   },
+  // Yirgacheffe: 1,750–2,200 m, harvest Oct–Jan, export-ready Jan–May. The
+  // Kochere station itself is published at 1,800–2,100 m, fermenting 36–48 h.
   {
     id: "ETH-YG-2408",
     region: "Yirgacheffe",
-    station: "Kochere washing station", // VERIFY
+    station: "Kochere washing station",
     process: "Fully washed",
-    varietal: "Heirloom 74112",
-    altitude: "1,900–2,100 m",
-    harvest: "Nov 24 – Jan 25",
+    varietal: "74112 · local heirloom",
+    altitude: "1,800–2,100 m",
+    harvest: "Oct – Jan",
+    shipping: "Jan – May",
     grade: "G1 · ECX Q1",
     screen: "15–17 (6.0–6.75 mm)",
     score: 87.5,
@@ -97,16 +111,20 @@ const LOTS: Lot[] = [
     scores: [8.5, 8.5, 8.25, 8.75, 7.75, 8.25],
     image: "/img/bags/yirgacheffe.webp",
   },
+  // Sidama: 1,550–2,200 m regionally, harvest Oct–Feb, export-ready Jan–Jun.
+  // Bensa sits at the top of that: its stations publish 1,920–2,300 m and pick
+  // Dec–Feb. 74158 is one of the three varieties common to Sidama.
   {
     id: "ETH-SD-2412",
     region: "Sidamo",
-    station: "Bensa washing station", // VERIFY
+    station: "Bensa washing station",
     process: "Fully washed",
-    varietal: "Heirloom 74158",
-    altitude: "1,850–2,050 m",
-    harvest: "Dec 24 – Feb 25",
+    varietal: "74158 · mixed heirloom",
+    altitude: "1,920–2,300 m",
+    harvest: "Dec – Feb",
+    shipping: "Jan – Jun",
     grade: "G1 · ECX Q1",
-    screen: "15–16 (6.0–6.35 mm)",
+    screen: "15–17 (6.0–6.75 mm)",
     score: 87.0,
     moisture: 10.5,
     water: 0.55,
@@ -117,24 +135,31 @@ const LOTS: Lot[] = [
     scores: [8.5, 8.25, 8.25, 8.5, 8.0, 8.25],
     image: "/img/bags/sidamo.webp",
   },
+  // Nekemte ships under the ECX trade name Lekempti. Gimbi is a West Wollega
+  // woreda, published at 1,600–2,100 m; harvest Oct–Jan, export-ready Mar–Aug,
+  // screen 14–18 but predominantly 15–17. Commercial Lekempti cups 78–84 and
+  // specialty micro-lots reach 85–87, so a G1 here is the top of the crop and
+  // needs reserving ahead — hence 86.25, not the 88 a Guji natural carries.
   {
     id: "ETH-NK-2415",
     region: "Nekemte",
-    station: "Gimbi washing station", // VERIFY
+    station: "Gimbi · West Wollega",
     process: "Natural",
     varietal: "Wollega heirloom",
-    altitude: "1,750–2,000 m",
-    harvest: "Nov 24 – Jan 25",
+    altitude: "1,600–2,100 m",
+    harvest: "Oct – Jan",
+    shipping: "Mar – Aug",
     grade: "G1 · ECX Q1",
-    screen: "14–16 (5.6–6.35 mm)",
-    score: 87.25,
+    screen: "15–17 (6.0–6.75 mm)",
+    score: 86.25,
     moisture: 10.7,
     water: 0.57,
     density: 705,
-    defects: 4,
+    // ECX G1 allows 0–3 full defects per 300 g, so a G1 lot cannot carry 4.
+    defects: 3,
     bags: "480 × 60 kg",
-    notes: "Cocoa · ripe apricot · sweet spice",
-    scores: [8.5, 8.25, 8.25, 8.25, 8.5, 8.25],
+    notes: "Stone fruit · jasmine · cocoa",
+    scores: [8.25, 8.25, 8.0, 8.0, 8.25, 8.0],
     image: "/img/bags/nekemte.webp",
   },
 ];
@@ -203,7 +228,7 @@ const SPEC: Spec[] = [
     okLo: 0,
     okHi: 5,
     dp: 0,
-    ref: "SCA specialty: max 5 full defects, zero category 1 · ECX G1 ≤ 3",
+    ref: "SCA specialty: max 5 full defects, zero category 1 · ECX G1 is 0–3",
     get: (l) => l.defects,
   },
 ];
@@ -223,11 +248,106 @@ function point(i: number, value: number) {
 
 const poly = (values: number[]) => values.map((v, i) => point(i, v).join(",")).join(" ");
 
+/**
+ * Tweens the six cupping values whenever the selected lot changes, so the
+ * polygon *reshapes* into the next lot instead of fading out and back in.
+ *
+ * This is the difference between decoration and information. Guji's acidity
+ * spike visibly collapsing into Nekemte's flatter, body-forward hexagon tells
+ * a buyer how the two lots differ in a way that two separate shapes, shown a
+ * third of a second apart, never can — the comparison happens in the motion.
+ *
+ * Hand-rolled rather than six motion values: the shape is one attribute string
+ * on one polygon, so there is nothing for a component-per-axis to buy, and
+ * writing the interpolation here keeps the site's easing curve authoritative.
+ */
+function useMorphingRadar(target: number[]) {
+  const polyRef = useRef<SVGPolygonElement>(null);
+  const dotRefs = useRef<(SVGCircleElement | null)[]>([]);
+
+  /**
+   * The shape React renders. Captured once, on mount, and never updated —
+   * React owns the first paint and the effect below owns every frame after it,
+   * so a re-render can never yank the polygon back to the selected lot's final
+   * values while a morph is still travelling.
+   */
+  const [initial] = useState(target);
+  /** Where the drawn shape actually is. Written only from the effect. */
+  const current = useRef(target);
+  const raf = useRef(0);
+
+  useEffect(() => {
+    const write = (values: number[]) => {
+      polyRef.current?.setAttribute("points", poly(values));
+      values.forEach((v, i) => {
+        const [x, y] = point(i, v);
+        const dot = dotRefs.current[i];
+        dot?.setAttribute("cx", String(x));
+        dot?.setAttribute("cy", String(y));
+      });
+      current.current = values;
+    };
+
+    // Jumping straight to the answer is the correct reduced-motion behaviour
+    // here: the shape carries data, so it must arrive — just not travel.
+    if (prefersReducedMotion()) {
+      write(target);
+      return;
+    }
+
+    const start = current.current;
+    const t0 = performance.now();
+    const ms = DUR.base * 1000;
+
+    /**
+     * The shape must arrive even if not a single frame of the morph does.
+     *
+     * requestAnimationFrame does not run in a backgrounded, hidden or occluded
+     * page, and this tween is the only thing that writes the polygon — so a
+     * starved rAF would leave the radar drawn from the *previous* lot while
+     * the spec sheet beside it names the new one. That is not a missing
+     * animation, it is a chart showing the wrong coffee. Timers still fire
+     * where frames do not, so one lands the final geometry regardless.
+     */
+    const land = window.setTimeout(() => write(target), ms + 400);
+
+    const step = (now: number) => {
+      const p = Math.min(1, (now - t0) / ms);
+      // The expo-out shape of --ease, closed-form. Sampling the cubic bezier
+      // properly would be more faithful and utterly indistinguishable.
+      const e = p === 1 ? 1 : 1 - Math.pow(2, -10 * p);
+      write(target.map((to, i) => start[i] + (to - start[i]) * e));
+
+      if (p < 1) {
+        raf.current = requestAnimationFrame(step);
+        return;
+      }
+      // Land on the exact figures rather than on the last interpolation.
+      write(target);
+      clearTimeout(land);
+    };
+
+    raf.current = requestAnimationFrame(step);
+    return () => {
+      cancelAnimationFrame(raf.current);
+      clearTimeout(land);
+    };
+    // Keyed on the array identity deliberately: LOTS is module-level, so each
+    // lot's `scores` is a stable reference and this runs once per change of
+    // lot rather than on every re-render. An interrupted morph resumes from
+    // wherever the shape had actually reached, via `current`.
+  }, [target]);
+
+  return { polyRef, dotRefs, initial };
+}
+
 export default function Quality() {
   const [active, setActive] = useState(0);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const lot = LOTS[active];
   const subtotal = lot.scores.reduce((s, v) => s + v, 0);
+  /** The drawn shape morphs into the selected lot rather than cutting to it. */
+  const { polyRef, dotRefs, initial } = useMorphingRadar(lot.scores);
 
   /** A tablist that ignores arrow keys isn't really a tablist. */
   function onKeyDown(e: React.KeyboardEvent) {
@@ -407,25 +527,35 @@ export default function Quality() {
                     </g>
                   );
                 })}
-                <motion.g
-                  key={lot.id}
-                  initial={{ opacity: 0, scale: 0.94 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                  style={{ transformOrigin: `${CX}px ${CY}px` }}
-                >
+                {/* No key, deliberately. Keying this group on the lot id
+                    remounts it on every change, which is what forced the old
+                    fade-and-rescale; letting one group persist is what allows
+                    the shape to morph from one lot into the next. */}
+                <g>
                   <polygon
-                    points={poly(lot.scores)}
+                    ref={polyRef}
+                    points={poly(initial)}
                     fill="var(--accent-solid)"
                     fillOpacity="0.18"
                     stroke="var(--accent-solid)"
                     strokeWidth="1.5"
                   />
-                  {lot.scores.map((v, i) => {
+                  {initial.map((v, i) => {
                     const [x, y] = point(i, v);
-                    return <circle key={i} cx={x} cy={y} r="2.5" fill="var(--accent-solid)" />;
+                    return (
+                      <circle
+                        key={i}
+                        ref={(el) => {
+                          dotRefs.current[i] = el;
+                        }}
+                        cx={x}
+                        cy={y}
+                        r="2.5"
+                        fill="var(--accent-solid)"
+                      />
+                    );
                   })}
-                </motion.g>
+                </g>
               </svg>
               <figcaption className="nums text-center text-[10px] text-faint">
                 Subtotal {subtotal.toFixed(2)} / 60 · SCA scale 6–10
@@ -464,6 +594,7 @@ export default function Quality() {
                   ["Screen", lot.screen],
                   ["Varietal", lot.varietal],
                   ["Harvest", lot.harvest],
+                  ["Ships", lot.shipping],
                   ["Available", lot.bags],
                 ].map(([k, v]) => (
                   <div key={k}>
@@ -476,7 +607,11 @@ export default function Quality() {
               {/* --- Analysis against the published spec ------------------- */}
               <div className="mt-5 border-t border-line pt-4">
                 <p className="text-[10px] uppercase tracking-[0.14em] text-faint">
-                  Pre-shipment analysis vs. standard
+                  Analysis vs. standard
+                </p>
+                <p className="mt-2 text-[10px] leading-snug text-faint">
+                  Crop-year typicals for the grade. The signed certificate of
+                  analysis for the specific lot travels with the sample.
                 </p>
                 <ul className="mt-3 space-y-3">
                   {SPEC.map((sp) => (

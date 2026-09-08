@@ -6,6 +6,7 @@ import Journey from "@/components/sections/Journey";
 import Origins from "@/components/sections/Origins";
 import Quality from "@/components/sections/Quality";
 import Logistics from "@/components/sections/Logistics";
+import Faq from "@/components/sections/Faq";
 import SisterCompanies from "@/components/sections/SisterCompanies";
 import SampleForm from "@/components/sections/SampleForm";
 import Footer from "@/components/sections/Footer";
@@ -40,6 +41,9 @@ export default function Home() {
         <Origins />
         <Quality />
         <Logistics />
+        {/* Directly before the form: this section exists to clear the
+            objections that stop someone filling it in. */}
+        <Faq />
         <SisterCompanies />
         <SampleForm />
       </main>

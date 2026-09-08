@@ -178,3 +178,68 @@ export function RevealLines({
     </span>
   );
 }
+
+/**
+ * The same clip reveal, cascading word by word instead of line by line.
+ *
+ * Worth the extra spans only on the largest display headings, where three
+ * lines arriving as three solid blocks is the one place the page still reads
+ * as *placed* rather than *set*. At body size the effect is invisible and the
+ * DOM cost is not.
+ *
+ * Lines stay an explicit array for the same reason `RevealLines` takes one —
+ * the breaks are art-directed. But note the trade: because every word is now
+ * its own inline-block, `text-balance` and `text-wrap` have nothing to work
+ * with, so only pass lines that are already broken the way you want them.
+ */
+export function RevealWords({
+  lines,
+  className,
+  immediate = false,
+}: {
+  lines: string[];
+  className?: string;
+  /** Play on mount rather than on scroll. */
+  immediate?: boolean;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useShown(ref);
+  const shown = immediate || inView;
+
+  // Continues across the line break rather than restarting per line, so the
+  // headline reads as one sweep instead of three.
+  let n = 0;
+
+  return (
+    <span className={`${shown ? "reveal-in " : ""}${className ?? ""}`} ref={ref}>
+      {lines.map((line) => (
+        <span key={line} className="block">
+          {line.split(" ").map((word) => {
+            const delay = n++ * STAGGER.tight;
+            return (
+              // The mask is inline-block so it can sit in the text flow, and
+              // bottom-padded with a matching negative margin so descenders
+              // clear the clip edge without adding leading between the lines.
+              <span
+                key={`${word}-${delay}`}
+                className="inline-block overflow-hidden pb-[0.12em] mb-[-0.12em] align-bottom"
+              >
+                <span
+                  className="reveal-word block will-change-transform"
+                  style={delay ? { animationDelay: `${delay}s` } : undefined}
+                >
+                  {word}
+                </span>
+                {/* A real space, outside the mask — a margin here would be
+                    wrong at every font size the headline clamps through. */}
+              </span>
+            );
+          }).reduce<ReactNode[]>(
+            (out, el, i) => (i ? [...out, " ", el] : [el]),
+            [],
+          )}
+        </span>
+      ))}
+    </span>
+  );
+}

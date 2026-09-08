@@ -14,7 +14,7 @@ import HeroVideo from "@/components/ui/HeroVideo";
  * is a win, not a failure.
  */
 const FACTS = [
-  { k: "Origins", v: "Yirgacheffe · Sidamo · Guji · Harrar" },
+  { k: "Origins", v: "Yirgacheffe · Sidamo · Guji · Jimma" },
   { k: "Grades", v: "G1 – G5, screen 14 – 18" },
   { k: "Terms", v: "FOB Djibouti · CIF on request" },
   { k: "Minimum", v: "One 20ft container, 19.2 MT" },
@@ -88,7 +88,7 @@ export default function Hero() {
           className="enter-rise enter-d3 mt-5 max-w-lg text-[0.9375rem] leading-relaxed text-muted sm:mt-6 sm:text-base"
         >
           We buy from washing stations in Yirgacheffe, Sidamo, Guji and
-          Harrar, mill and grade in Addis Ababa, and ship out of Djibouti. Each
+          Jimma, mill and grade in Addis Ababa, and ship out of Djibouti. Each
           lot stays traceable to the station it came from.
         </p>
 

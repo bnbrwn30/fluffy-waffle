@@ -8,6 +8,7 @@ import { prefersReducedMotion } from "@/lib/motion";
 import {
   cancelScrollTo,
   publishScroll,
+  publishVelocity,
   registerScroller,
   scrollToHash,
 } from "@/lib/scroll";
@@ -84,21 +85,56 @@ export default function SmoothScroll() {
       // so a short flick compounds into a launch down the page. Lerp eases
       // toward the target at a fixed rate per frame instead — the glide stays
       // proportional to how much was actually scrolled.
-      lerp: 0.09,
+      lerp: 0.075,
       smoothWheel: true,
-      // A notch below 1 so a single detent travels a readable distance
-      // instead of overshooting the section it was aimed at.
-      wheelMultiplier: 0.85,
+      // Well below 1 so a single detent travels a readable distance instead
+      // of overshooting the section it was aimed at. 0.85 still ran away in
+      // the dense reading sections — Origins in particular, where the map and
+      // the spec table both want to be looked at rather than passed.
+      wheelMultiplier: 0.72,
       // Touch devices already have momentum scrolling; doubling it feels wrong.
       syncTouch: false,
     });
 
     lenis.on("scroll", ScrollTrigger.update);
-    lenis.on("scroll", ({ scroll }: { scroll: number }) => publishScroll(scroll));
+
+    /**
+     * Raw wheel/touch velocity, in pixels per frame, latched on each scroll
+     * event and decayed on every frame that does not bring a new one.
+     *
+     * The decay is what makes it usable. Lenis stops emitting the moment the
+     * glide settles, so a value that only ever updated on the event would
+     * freeze at whatever the last frame happened to be — the page would look
+     * permanently mid-flick after every scroll.
+     */
+    let raw = 0;
+    let smoothed = 0;
+    const root = document.documentElement;
+
+    lenis.on("scroll", ({ scroll, velocity }: { scroll: number; velocity: number }) => {
+      publishScroll(scroll);
+      raw = velocity;
+    });
 
     registerScroller(lenis);
 
-    const raf = (time: number) => lenis.raf(time * 1000);
+    const raf = (time: number) => {
+      lenis.raf(time * 1000);
+
+      raw *= 0.86;
+      // Divisor set against a hard trackpad flick, which peaks near 45 px per
+      // frame — so ordinary reading scrolls sit around 0.1 and only a genuine
+      // throw reaches the clamp.
+      const target = Math.max(-1, Math.min(1, raw / 45));
+      smoothed += (target - smoothed) * 0.14;
+      // Below a thousandth nothing on the page can express the difference, and
+      // writing a custom property every frame forever is not free.
+      if (Math.abs(smoothed) < 0.001) smoothed = 0;
+
+      publishVelocity(smoothed);
+      root.style.setProperty("--vel", smoothed.toFixed(3));
+      root.style.setProperty("--vel-abs", Math.abs(smoothed).toFixed(3));
+    };
     gsap.ticker.add(raf);
     gsap.ticker.lagSmoothing(0);
 

@@ -14,7 +14,7 @@ export default function Footer() {
             Vera Coffee Export<span className="text-accent">.</span>
           </p>
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-faint">
-            Specialty green coffee from Yirgacheffe, Sidamo, Guji and Harrar.
+            Specialty green coffee from Yirgacheffe, Sidamo, Guji and Jimma.
             Addis Ababa, Ethiopia.
           </p>
         </div>

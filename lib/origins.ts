@@ -38,8 +38,17 @@ export type Origin = {
   pitch: string;
   /** Blender-rendered still, public/img/origins/<still>.webp */
   still: string;
-  /** Position on the inline SVG map, in that SVG's viewBox units. */
-  map: { x: number; y: number };
+  /**
+   * True coordinates of the region's main trading town, in decimal degrees.
+   *
+   * The map projects these rather than carrying hand-placed pixel positions.
+   * That is not pedantry: the previous hand-tuned pairs had Yirgacheffe
+   * plotted west of Sidamo and Harrar in the centre of the country, because
+   * nothing tied a dot to a place. Coordinates cannot drift when the outline
+   * is retouched, and anyone can check them.
+   */
+  lon: number;
+  lat: number;
 };
 
 export const ORIGINS: Origin[] = [
@@ -60,7 +69,9 @@ export const ORIGINS: Origin[] = [
       "The best known of the Ethiopian origins, and the floral, tea-like cup " +
       "most roasters have in mind when they ask for Ethiopian coffee.",
     still: "yirgacheffe",
-    map: { x: 295, y: 455 },
+    // Yirga Chefe town, Gedeo zone.
+    lon: 38.21,
+    lat: 6.16,
   },
   {
     id: "sidamo",
@@ -79,7 +90,9 @@ export const ORIGINS: Origin[] = [
       "Wide altitude band and the deepest supply of the four, which makes it " +
       "the easiest region to buy repeatably for a blend or a house espresso.",
     still: "sidamo",
-    map: { x: 320, y: 415 },
+    // Hawassa / central Sidama.
+    lon: 38.5,
+    lat: 6.75,
   },
   {
     id: "guji",
@@ -98,27 +111,37 @@ export const ORIGINS: Origin[] = [
       "Our highest band, and where the naturals get most expressive. Usually " +
       "what buyers pick for a single origin filter or a competition lot.",
     still: "guji",
-    map: { x: 350, y: 470 },
+    // Shakiso, Guji zone.
+    lon: 38.98,
+    lat: 5.77,
   },
   {
-    id: "harrar",
-    name: "Harrar",
-    zone: "Hararghe, Oromia",
-    altitude: [1500, 2100],
-    processes: ["Natural (dry)"],
-    varietal: "Heirloom longberry",
-    harvest: "October – February",
-    cupScore: [83, 86],
-    screen: "15–18 (6.0–7.1 mm)",
-    density: [660, 700],
+    id: "jimma",
+    name: "Jimma",
+    zone: "Jimma, Oromia",
+    // The zone spans 1,400–2,100 m; Jimma-proper production sits in the lower
+    // half of that, 1,400–1,800 m, which is most of why it cups where it does.
+    altitude: [1400, 2100],
+    processes: ["Natural (dry)", "Fully washed"],
+    varietal: "Ethiopian heirloom",
+    harvest: "October – December",
+    // Published as 78–82 for commercial Jimma, with well-sorted G4 lots out of
+    // Agaro reaching 80–82. Stated honestly rather than inflated to match the
+    // other three: a buyer cups the sample either way, and an exporter who
+    // claims 86 for Jimma has told them something useful about the exporter.
+    cupScore: [78, 82],
+    screen: "14–16 (5.6–6.35 mm)", // VERIFY against ECX prep for the crop year
+    density: [640, 690], // VERIFY — no published band found for this origin
     grades: ["G4", "G5"],
-    notes: ["Blueberry", "Red wine", "Warm spice", "Heavy body"],
+    notes: ["Dark chocolate", "Tobacco", "Grain", "Low acidity"],
     pitch:
-      "Dried on the cherry in the eastern highlands, with the winey, " +
-      "fruit-forward profile the region is known for. It divides opinion, so " +
-      "it is worth cupping before committing to volume.",
-    still: "harrar",
-    map: { x: 465, y: 315 },
+      "The volume origin: earthy, full bodied and low in acidity, dominated " +
+      "by natural processing at lower altitude. This is what a blend base or " +
+      "a price-led programme is built on, not a competition lot.",
+    still: "jimma",
+    // Jimma town, Oromia.
+    lon: 36.83,
+    lat: 7.68,
   },
 ];
 

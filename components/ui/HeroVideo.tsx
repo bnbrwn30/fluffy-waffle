@@ -38,6 +38,18 @@ export default function HeroVideo() {
     const play = () => el.play().catch(() => {});
     play();
 
+    // If the first play() landed before there were any frames to show, the
+    // browser resolves it and then sits on the poster. Kick it again as soon
+    // as data arrives so the plate is moving on the first frame it has.
+    const ready = ["loadedmetadata", "loadeddata", "canplay"] as const;
+    const onReady = () => {
+      if (el.paused) play();
+    };
+    ready.forEach((e) => el.addEventListener(e, onReady));
+    // A cached video can be ready before this effect runs, in which case none
+    // of those events will fire again.
+    if (el.readyState >= 2) play();
+
     const events = ["touchstart", "pointerdown", "scroll"] as const;
     const retry = () => {
       play();
@@ -54,6 +66,7 @@ export default function HeroVideo() {
     document.addEventListener("visibilitychange", onVisible);
 
     return () => {
+      ready.forEach((e) => el.removeEventListener(e, onReady));
       events.forEach((e) => window.removeEventListener(e, retry));
       document.removeEventListener("visibilitychange", onVisible);
     };
@@ -65,6 +78,8 @@ export default function HeroVideo() {
         src="/video/green-beans-poster.jpg"
         alt=""
         aria-hidden
+        // No reveal on the still: this branch exists because the reader asked
+        // for reduced motion, and an opening clip is motion.
         className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover"
       />
     );
@@ -81,7 +96,12 @@ export default function HeroVideo() {
       preload="auto"
       poster="/video/green-beans-poster.jpg"
       aria-hidden
-      className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover"
+      // `hero-open` fades the plate up on load — see globals.css. Kept short
+      // so the footage is visibly running straight away. CSS keyframes rather
+      // than the motion library for the same reason the rest of the hero uses
+      // them: this has to play off the stylesheet, before any JavaScript
+      // arrives.
+      className="hero-open pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover"
     >
       {/* MP4 first: Safari's WebM support is partial and it will not fall
           back once it has committed to a source. */}

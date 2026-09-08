@@ -7,7 +7,7 @@ import { BEATS, beatIndexAt } from "@/lib/journey";
 import { DUR, EASE } from "@/lib/motion";
 
 /**
- * The signature section: nine photographs from wild forest to a ship leaving
+ * The signature section: four photographs from wild forest to a ship leaving
  * Djibouti, cross-dissolving under a slow push as you scroll, with the beat
  * copy and its hard number changing over them.
  *
@@ -88,7 +88,7 @@ export default function Journey({ available }: { available: string[] }) {
               )}
             </div>
 
-            {/* Progress rail — nine ticks, one per beat. */}
+            {/* Progress rail — one tick per beat. */}
             <div className="mt-7 flex items-center gap-1.5 sm:mt-10 sm:gap-2" aria-hidden>
               {BEATS.map((b, i) => (
                 <span

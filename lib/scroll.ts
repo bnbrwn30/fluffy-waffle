@@ -25,6 +25,31 @@ export function onScroll(listener: Listener): () => void {
   return () => listeners.delete(listener);
 }
 
+/* --- Scroll velocity ------------------------------------------------------
+ *
+ * How *fast* the page is moving, normalised to roughly -1…1 and smoothed, so
+ * anything on the page can lean into the scroll instead of merely responding
+ * to its position. This is the difference between a site that animates and one
+ * that feels physical: a fast flick should visibly cost something.
+ *
+ * Kept as module state rather than React state on purpose — it changes every
+ * frame, and re-rendering the tree sixty times a second to move a scale by two
+ * per cent is how a smooth page stops being smooth. Consumers either read it
+ * inside their own rAF loop (see PhotoJourney) or let CSS read the `--vel`
+ * custom property that SmoothScroll mirrors it into.
+ */
+let vel = 0;
+
+/** Called by SmoothScroll once per frame with the already-smoothed value. */
+export function publishVelocity(v: number) {
+  vel = v;
+}
+
+/** Signed, smoothed, clamped to -1…1. Positive is downward. */
+export function velocity(): number {
+  return vel;
+}
+
 /**
  * The live Lenis instance, registered by SmoothScroll.
  *

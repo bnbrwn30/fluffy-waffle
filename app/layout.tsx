@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     template: "%s · Vera Coffee Export",
   },
   description:
-    "Specialty green coffee exported from Ethiopia — Yirgacheffe, Sidamo, Guji and Harrar. " +
+    "Specialty green coffee exported from Ethiopia — Yirgacheffe, Sidamo, Guji and Jimma. " +
     "Traceable lots, G1 grades, FOB Djibouti. Request a sample.",
   keywords: [
     "Ethiopian green coffee",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     "Yirgacheffe",
     "Sidamo",
     "Guji",
-    "Harrar",
+    "Jimma",
     "specialty coffee importer",
     "FOB Djibouti",
   ],
@@ -65,7 +65,7 @@ const orgJsonLd = {
   name: "Vera Coffee Export",
   url: SITE,
   description:
-    "Exporter of specialty Ethiopian green coffee from Yirgacheffe, Sidamo, Guji and Harrar.",
+    "Exporter of specialty Ethiopian green coffee from Yirgacheffe, Sidamo, Guji and Jimma.",
   address: {
     "@type": "PostalAddress",
     addressLocality: "Addis Ababa",

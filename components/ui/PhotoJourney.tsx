@@ -5,13 +5,14 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { BEATS, photoPath } from "@/lib/journey";
 import { prefersReducedMotion } from "@/lib/motion";
+import { velocity } from "@/lib/scroll";
 
 /**
- * The scroll centrepiece: nine photographs cross-dissolving under a slow push,
+ * The scroll centrepiece: four photographs cross-dissolving under a slow push,
  * scrubbed by scroll position inside a pinned section.
  *
  * Opacity and transform are written straight to the DOM on each scroll update
- * rather than through React state. Nine layers re-rendering at scroll frequency
+ * rather than through React state. Four layers re-rendering at scroll frequency
  * would drop frames; assigning two style properties per layer does not.
  *
  * Photographs are optional. A beat with no file shows its tint instead, so the
@@ -123,12 +124,21 @@ export default function PhotoJourney({
         const o = d <= 0.5 ? 1 : Math.max(0, 1 - (d - 0.5) / FADE);
 
         // Ken Burns: a slow, continuous push. Never resets between beats, so
-        // the whole section reads as one move rather than nine separate ones.
+        // the whole section reads as one move rather than four separate ones.
         const local = (p - i / n) * n;
         const scale = 1.1 - Math.min(Math.max(local, -0.4), 1.4) * 0.07;
 
+        // Velocity lean: a hard flick pushes the frame in a little further,
+        // and it settles back as the glide decays. Read from the scroll module
+        // rather than from React state — this runs at scroll frequency, and
+        // re-rendering four layers a frame to move a scale by two per cent is
+        // precisely the cost this component was built to avoid. Direction is
+        // deliberately ignored: the push should read as pressure, not as the
+        // image sliding with the wheel.
+        const lean = 1 + Math.abs(velocity()) * 0.022;
+
         el.style.opacity = String(o);
-        el.style.transform = `scale(${scale.toFixed(4)})`;
+        el.style.transform = `scale(${(scale * lean).toFixed(4)})`;
         // Fully transparent layers stop costing compositing work.
         el.style.visibility = o <= 0.001 ? "hidden" : "visible";
       });

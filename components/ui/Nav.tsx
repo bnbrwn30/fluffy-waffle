@@ -21,6 +21,7 @@ const LINKS = [
   { href: "#origins", label: "Origins" },
   { href: "#quality", label: "Quality" },
   { href: "#logistics", label: "Logistics" },
+  { href: "#faq", label: "FAQ" },
   { href: "#contact", label: "Contact" },
 ];
 
@@ -28,11 +29,15 @@ const LINKS = [
 const SETTLE = 24;
 /** Slack before a direction change counts, so a trackpad jitter can't flicker it. */
 const THRESHOLD = 8;
+/** Approximate lower edge of the floating plate, in px from the viewport top. */
+const NAV_BOTTOM = 72;
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [open, setOpen] = useState(false);
+  /** True while the plate is over the journey cinematic's dark ground. */
+  const [onDark, setOnDark] = useState(false);
   const lastY = useRef(0);
 
   /**
@@ -48,6 +53,24 @@ export default function Nav() {
       const delta = y - lastY.current;
 
       setScrolled(y > SETTLE);
+
+      /**
+       * Invert the palette while the plate crosses the journey section.
+       *
+       * That section redefines every colour token for its own subtree because
+       * it carries full-bleed graded photography; the bar floats above it in
+       * the page's light palette and, left alone, drags a scrap of daylight
+       * across the cinematic. Flipping it as it enters makes the chrome look
+       * like it is passing *through* the film rather than sitting on top of it.
+       *
+       * Measured against the section's live rect rather than a stored offset:
+       * the journey is GSAP-pinned, so the document height around it changes
+       * while you are scrolling through it.
+       */
+      const dark = document.getElementById("journey")?.getBoundingClientRect();
+      // NAV_BOTTOM is roughly where the plate ends; the swap should happen when
+      // the bar is genuinely over the dark ground, not when it merely touches.
+      setOnDark(!!dark && dark.top <= NAV_BOTTOM && dark.bottom >= NAV_BOTTOM);
 
       if (Math.abs(delta) > THRESHOLD) {
         // Never hide over the hero; there's nothing to gain from it there.
@@ -72,10 +95,13 @@ export default function Nav() {
           "pointer-events-auto relative mx-auto flex w-full max-w-3xl items-center justify-between",
           "overflow-hidden rounded-full",
           "px-4 py-2 sm:px-5 sm:py-2.5",
-          "border border-white/20",
+          "border",
           "backdrop-blur-xl backdrop-saturate-150",
-          "transition-[background-color,box-shadow,border-color] duration-[var(--dur-base)]",
+          "transition-[background-color,box-shadow,border-color,color] duration-[var(--dur-base)]",
           "[transition-timing-function:var(--ease)]",
+          // Palette only — the glass, the blur and the bevel are unchanged, so
+          // the plate keeps its material and only its ink flips.
+          onDark ? "tokens-dark border-white/15" : "border-white/20",
           scrolled
             ? "bg-[color-mix(in_srgb,var(--surface)_60%,transparent)] shadow-[0_10px_30px_-14px_rgba(23,18,13,0.45)]"
             : "bg-[color-mix(in_srgb,var(--surface)_22%,transparent)] shadow-[0_6px_24px_-16px_rgba(23,18,13,0.3)]",
@@ -103,7 +129,7 @@ export default function Nav() {
 
         <Link
           href="#top"
-          className="font-display shrink-0 text-base tracking-tight text-fg"
+          className="font-display shrink-0 text-base tracking-tight text-fg transition-colors duration-[var(--dur-base)] [transition-timing-function:var(--ease)]"
         >
           Vera Coffee<span className="text-accent">.</span>
         </Link>
@@ -113,7 +139,7 @@ export default function Nav() {
             <a
               key={l.href}
               href={l.href}
-              className="transition-colors duration-[var(--dur-fast)] hover:text-fg"
+              className="link-wipe transition-colors duration-[var(--dur-fast)] hover:text-fg"
             >
               {l.label}
             </a>
@@ -153,6 +179,8 @@ export default function Nav() {
         <div
           className={[
             "pointer-events-auto mx-auto mt-2 w-full max-w-3xl overflow-hidden rounded-2xl md:hidden",
+            // The sheet is a second plate, so it inverts with the first.
+            onDark ? "tokens-dark" : "",
             "border border-white/25 backdrop-blur-xl backdrop-saturate-150",
             "bg-[color-mix(in_srgb,var(--surface)_78%,transparent)]",
             "shadow-[0_8px_32px_-8px_rgba(23,18,13,0.28)]",

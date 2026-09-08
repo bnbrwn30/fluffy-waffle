@@ -5,36 +5,12 @@ import { AnimatePresence, motion } from "motion/react";
 import { ORIGINS, getOrigin } from "@/lib/origins";
 import { DUR, EASE } from "@/lib/motion";
 import Reveal from "@/components/ui/Reveal";
+import EthiopiaMap from "@/components/ui/EthiopiaMap";
 
 /** Metres at the bottom and top of the altitude plot. */
 const LO = 1400;
 const HI = 2400;
 const pct = (m: number) => ((m - LO) / (HI - LO)) * 100;
-
-/**
- * Stylised outline of Ethiopia. Deliberately simplified — this is a locator
- * graphic, not a survey map, and a hand-tuned path stays legible at 320px wide
- * where real border geometry turns to mush.
- */
-/**
- * Which side of its dot each label hangs off.
- *
- * Yirgacheffe, Sidamo and Guji sit within fifty units of each other, so three
- * labels all set to the right of their dots overlap into mush — worst at phone
- * widths, where the whole map is 300px across. Pushing the two western ones
- * left resolves it without moving any dot off its actual position.
- */
-const LABEL_SIDE: Record<string, "left" | "right"> = {
-  yirgacheffe: "left",
-  sidamo: "left",
-  guji: "right",
-  harrar: "right",
-};
-
-const ETHIOPIA =
-  "M150 210 L250 150 L330 130 L400 165 L445 200 L500 235 L575 300 L520 340 " +
-  "L470 380 L420 430 L380 480 L330 515 L275 505 L235 470 L190 420 L160 350 " +
-  "L140 280 Z";
 
 export default function Origins() {
   const [activeId, setActiveId] = useState(ORIGINS[0].id);
@@ -99,66 +75,12 @@ export default function Origins() {
         <div className="mt-8 grid gap-8 sm:mt-10 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] md:gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)] lg:gap-12">
           {/* --- Map + altitude ------------------------------------------- */}
           <div className="relative">
-            {/* viewBox is cropped to the outline itself — the old 0 0 600 600
-                frame padded the map with a third of a screen of empty space. */}
-            <svg
-              viewBox="125 115 470 420"
-              className="mx-auto w-full max-w-[19rem] sm:max-w-sm md:max-w-none"
-              role="presentation"
-              aria-hidden
-            >
-              <path
-                d={ETHIOPIA}
-                fill="var(--surface)"
-                stroke="var(--line)"
-                strokeWidth="1.5"
-              />
-              {ORIGINS.map((o) => {
-                const on = o.id === activeId;
-                return (
-                  <g key={o.id}>
-                    {on && (
-                      <motion.circle
-                        cx={o.map.x}
-                        cy={o.map.y}
-                        r={24}
-                        fill="var(--accent-solid)"
-                        initial={{ opacity: 0, scale: 0.4 }}
-                        animate={{ opacity: 0.16, scale: 1 }}
-                        transition={{ duration: DUR.base, ease: EASE }}
-                        style={{ transformOrigin: `${o.map.x}px ${o.map.y}px` }}
-                      />
-                    )}
-                    <circle
-                      cx={o.map.x}
-                      cy={o.map.y}
-                      r={on ? 6.5 : 4}
-                      fill={on ? "var(--accent-solid)" : "var(--faint)"}
-                      style={{
-                        transition: `r var(--dur-fast) var(--ease), fill var(--dur-fast) var(--ease)`,
-                      }}
-                    />
-                    <text
-                      x={
-                        LABEL_SIDE[o.id] === "left"
-                          ? o.map.x - 13
-                          : o.map.x + 13
-                      }
-                      y={o.map.y + 5}
-                      textAnchor={
-                        LABEL_SIDE[o.id] === "left" ? "end" : "start"
-                      }
-                      fill={on ? "var(--fg)" : "var(--faint)"}
-                      fontSize="19"
-                      style={{ transition: "fill var(--dur-fast) var(--ease)" }}
-                    >
-                      {o.name}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-
+            {/* Reveal supplies the trigger class the draw-on keyframes hang
+                off: the outline surveys itself, the face washes in behind it,
+                then the four stations drop onto the plate in file order. */}
+            <Reveal>
+              <EthiopiaMap activeId={activeId} onPick={setActiveId} />
+            </Reveal>
             <AltitudeBands activeId={activeId} onPick={setActiveId} />
           </div>
 

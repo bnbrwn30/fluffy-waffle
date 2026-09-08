@@ -1,4 +1,4 @@
-import Reveal, { RevealLines } from "@/components/ui/Reveal";
+import Reveal, { RevealWords } from "@/components/ui/Reveal";
 import CountUp from "@/components/ui/CountUp";
 
 /**
@@ -56,9 +56,12 @@ export default function Forest() {
 
             <h2
               id="forest-heading"
-              className="font-display mt-4 text-[clamp(1.85rem,7.4vw,3.5rem)] leading-[1.04] text-balance text-fg"
+              // `text-balance` is gone with the per-word masks — every word is
+              // its own inline-block, so there is nothing left for the browser
+              // to balance. The breaks below are doing that job by hand.
+              className="font-display mt-4 text-[clamp(1.85rem,7.4vw,3.5rem)] leading-[1.04] text-fg"
             >
-              <RevealLines
+              <RevealWords
                 lines={["Coffee is native to", "Ethiopia, and still", "grows wild here."]}
               />
             </h2>

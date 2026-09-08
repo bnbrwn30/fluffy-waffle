@@ -35,6 +35,13 @@
   --dur-fast: 0.3s;
   --dur-base: 0.6s;
   --dur-slow: 1.2s;
+
+  /* Live scroll velocity, written every frame by SmoothScroll: signed in
+     --vel, magnitude in --vel-abs, both roughly -1…1. Declared here so the
+     page is correct before any JavaScript runs and under reduced motion,
+     where nothing ever writes them. */
+  --vel: 0;
+  --vel-abs: 0;
 }
 
 /* Any section that needs to carry dark imagery opts in by redefining the same
@@ -52,6 +59,26 @@
   --clay: #d98f6a;
   background: var(--bg);
   color: var(--fg);
+}
+
+/* The token half of `.on-dark`, without the paint.
+ *
+ * `.on-dark` also sets its own background and colour, which is right for a
+ * section that owns a dark ground but wrong for the nav — that plate is
+ * frosted glass and has to keep showing the footage through it. This inverts
+ * the palette only, so the type and the hairlines flip while the glass stays
+ * glass. Used by the bar as it crosses the journey cinematic. */
+.tokens-dark {
+  --bg: #0b0907;
+  --surface: #14100d;
+  --line: #2b231c;
+  --fg: #f3ebdd;
+  --muted: #b8ac9b;
+  --faint: #8d8377;
+  --accent: #dd9c42;
+  --accent-solid: #c67b24;
+  --accent-hover: #e0983f;
+  --clay: #d98f6a;
 }
 
 /* One extra breakpoint below Tailwind's `sm`. Small phones (320–400px) are a
@@ -195,6 +222,66 @@ body {
   animation: enter-line var(--dur-slow) var(--ease) both;
 }
 
+/* --- Hero footage reveal ---------------------------------------------------
+ *
+ * The plate is uncovered rather than faded up: a clip opening from the centre
+ * outward, on the slow curve, so the first thing the page does is *open*.
+ *
+ * On the video element itself, not a wrapper — the video is already absolutely
+ * positioned at -z-10 behind the copy, and wrapping it would mean a second
+ * positioned box to keep in step with it.
+ *
+ * A clip-path is safe here where a transform would not be: the copy above it
+ * animates independently and must stay pin-sharp, and clipping does not
+ * rasterise what it clips.
+ */
+@keyframes hero-open {
+  from {
+    opacity: 0;
+    transform: scale(1.03);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Short and opacity-only. The long clip-path open used to hold the footage
+   half-covered for the best part of two seconds, which read as the video
+   failing to start rather than as an entrance. */
+.hero-open {
+  animation: hero-open 0.45s var(--ease) both;
+}
+
+/* --- Link underline -------------------------------------------------------
+ *
+ * Wipes in from the left in amber instead of the whole word changing colour.
+ * `scaleX` on a pseudo-element rather than a background-size or a border, so
+ * the animation is a compositor transform and the text metrics never move.
+ */
+.link-wipe {
+  position: relative;
+}
+
+.link-wipe::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* Below the baseline, clear of descenders. */
+  bottom: -0.15em;
+  height: 1px;
+  background: var(--accent-solid);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.link-wipe:hover::after,
+.link-wipe:focus-visible::after {
+  transform: scaleX(1);
+}
+
 /* Stagger steps, matching STAGGER.loose / STAGGER.base in lib/motion.ts. */
 .enter-d1 {
   animation-delay: 0.14s;
@@ -243,13 +330,156 @@ body {
   animation: enter-line var(--dur-slow) var(--ease) both;
 }
 
+/* Per-word masks, for display headlines that want a cascade rather than three
+   solid lines arriving. Same keyframe as .reveal-line — only the unit and the
+   stagger change, which is the point: it stays one motion system. */
+.reveal-word {
+  transform: translateY(115%);
+}
+
+.reveal-in .reveal-word {
+  transform: none;
+  animation: enter-line var(--dur-slow) var(--ease) both;
+}
+
+/* --- Map draw-on -----------------------------------------------------------
+ *
+ * The Ethiopia outline draws itself, then the paper fill washes in behind it,
+ * then the station pins drop. Drawing before filling is the whole effect: it
+ * reads as a map being surveyed rather than a shape appearing.
+ *
+ * `pathLength="1"` on the element normalises the geometry, so the dash values
+ * here are fractions of the outline and no JavaScript ever has to measure it.
+ */
+@keyframes map-survey {
+  0% {
+    stroke-dashoffset: 1;
+    fill-opacity: 0;
+  }
+  62% {
+    stroke-dashoffset: 0;
+    fill-opacity: 0;
+  }
+  /* The land washes in behind the completed border, which is what makes it
+     read as a survey rather than as a shape fading up. */
+  100% {
+    stroke-dashoffset: 0;
+    fill-opacity: 1;
+  }
+}
+
+@keyframes pin-in {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.map-outline {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  fill-opacity: 0;
+}
+
+.reveal-in .map-outline {
+  animation: map-survey 1.35s var(--ease) both;
+}
+
+/* The extruded wall, arriving under the face as the survey completes. */
+.map-face {
+  opacity: 0;
+}
+
+.reveal-in .map-face {
+  animation: enter-fade var(--dur-base) var(--ease) 0.85s both;
+}
+
+/* The graticule, printed on the land once there is land to print it on. */
+.map-grid {
+  opacity: 0;
+}
+
+.reveal-in .map-grid {
+  animation: enter-fade var(--dur-base) var(--ease) 1.1s both;
+}
+
+/* --- Export route ---------------------------------------------------------
+ *
+ * The line draws itself from the station outward, then its dashes march
+ * toward the port for as long as the region is selected. Two animations on one
+ * element: `route-draw` runs once to lay the line down, `route-march` loops
+ * after it. The march is the only infinite animation on the page, which is why
+ * it is this quiet — 1.6s per seven-unit dash is a drift, not a barber pole.
+ */
+@keyframes route-draw {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes route-march {
+  to {
+    /* One dash-plus-gap, so the cycle is seamless. */
+    stroke-dashoffset: -13;
+  }
+}
+
+.route-line {
+  /* The two animations touch different properties on purpose. Both wanted
+     stroke-dashoffset at first — one to draw the line on, one to march it —
+     and they simply overwrote each other, because the dash pattern IS the
+     marching unit. So the entrance is a fade and the loop owns the offset. */
+  opacity: 0;
+  animation:
+    route-draw var(--dur-base) var(--ease) 0.05s both,
+    route-march 1.6s linear var(--dur-base) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-line {
+    animation: none !important;
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+.map-pin {
+  opacity: 0;
+  /* An SVG group has no CSS box of its own, so a percentage transform-origin
+     has nothing to resolve against until the geometry is made the reference. */
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.reveal-in .map-pin {
+  animation: pin-in var(--dur-base) var(--ease) both;
+}
+
 /* No JavaScript, no observer, no class — so the hidden state must not apply
    at all. Better an entrance nobody sees than a page nobody can read. */
 @media (scripting: none) {
   .reveal,
-  .reveal-line {
+  .reveal-line,
+  .reveal-word {
     opacity: 1;
     transform: none;
+  }
+
+  .map-outline {
+    stroke-dashoffset: 0;
+    fill-opacity: 1;
+  }
+
+  .map-face,
+  .map-pin {
+    opacity: 1;
   }
 }
 
@@ -262,10 +492,34 @@ body {
   .enter-fade,
   .enter-line,
   .reveal,
-  .reveal-line {
+  .reveal-line,
+  .reveal-word,
+  .map-pin {
     animation: none !important;
     opacity: 1;
     transform: none;
+  }
+
+  /* The hero plate is clipped as well as faded, so dropping the animation has
+     to restore the clip too or the footage stays letterboxed. */
+  .hero-open {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+  }
+
+  /* The map is drawn by a dash offset and a fill, not an opacity — collapsing
+     the duration would strand a half-surveyed border with no land inside it. */
+  .map-outline {
+    animation: none !important;
+    stroke-dashoffset: 0;
+    fill-opacity: 1;
+  }
+
+  .map-face {
+    animation: none !important;
+    opacity: 1;
   }
 }
 
